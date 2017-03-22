@@ -51,7 +51,7 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	// for(auto x: backup)
 		// printf("%d\n", x);
 
-	while(T > 10e-5 && runing) {
+	while(T > 1 && runing) {
 
 		int u = -1;
 		do {
@@ -104,10 +104,14 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 			minCost = min(minCost, backCost);
 		}
 
-		T *= 0.999;
+		T *= 0.9999;
 		// printf("T=%lf\n", T);
 		// puts("");
 	}
 
+	printf("Deploy CDN:\n");
+	for(int x: backup)
+		printf("%d ", x);
+	puts("");
 	printf("minCost: %d/%d cdnNum: %ld\n", minCost, mcmf.consumerNum * mcmf.costPerCDN, backup.size());
 }
