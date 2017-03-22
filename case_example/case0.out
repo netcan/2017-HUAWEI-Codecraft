@@ -1,0 +1,13 @@
+networkNode: 50 edgeNum: 96 cosumerNode: 9
+costPerCDN: 260
+======Output=======
+7->53 flow: 22
+13->55 flow: 40
+15->56 flow: 49
+22->52 flow: 36
+37->54 flow: 46
+38->57 flow: 63
+43->50 flow: 24
+13->3->32->34->58 flow: 8
+43->44->51 flow: 15
+Flow :303/303 Cost: 2042
