@@ -31,8 +31,6 @@ class MCMF{
 		static char topo[50000*1000*6];
 
 		int n, superSource, superSink; // 点数，超级源点/汇点，需要的流量
-		vector<Edge> edges, oldEdges; // 边集，边集备份
-		vector<int> G[N]; // 图
 		int d[N], f[N], p[N]; // 最小费用，当前流量，父节点（增广路径），中间变量
 		bool vis[N]; // 标记指针
 		pair<pair<int, int>, vector<vector<int>>> path; // 费用/流量，流量->路径
@@ -47,6 +45,8 @@ class MCMF{
 				edges = move(oldEdges);
 		}
 	public:
+		vector<int> G[N]; // 图
+		vector<Edge> edges, oldEdges; // 边集，边集备份
 		int networkNum, edgeNum, consumerNum, costPerCDN, needFlow;
 		static const int INF = 0x3f3f3f3f;
 
@@ -78,7 +78,7 @@ class MCMF{
 		}
 		inline void setCdn(const unordered_set<int> & cdn) {
 			reset();
-			for(auto &x: cdn)
+			for(int x: cdn)
 				AddEdge(superSource, x, MCMF::INF, 0);
 		}
 
