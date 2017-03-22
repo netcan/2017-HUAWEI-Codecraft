@@ -104,7 +104,7 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 			minCost = min(minCost, backCost);
 		}
 
-		T *= 0.9999;
+		T *= 0.999;
 		// printf("T=%lf\n", T);
 		// puts("");
 	}
