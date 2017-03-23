@@ -32,9 +32,9 @@ void SA() {
 	backCost = mcmf.minCost();
 	minCost = min(minCost, backCost);
 
-	double T = 20.0, delta = 0.9999; // 初始温度
+	double T = 20.0, delta = 0.99999; // 初始温度0.9999-0.99999
 
-	while(T > 1 && runing) {
+	while(T > 0.1 && runing) {
 		int u = -1;
 		do {
 			for(auto x: backup) {
@@ -79,19 +79,20 @@ void SA() {
 		T *= delta;
 	}
 
+	printf("T=%lf\n", T);
 	printf("Deploy CDN(%ld):\n", backup.size());
 	for(int x: backup)
 		printf("%d ", x);
-	puts("\n=====Solution======");
-	mcmf.showSolution();
-	// printf("minCost: %d/%d cdnNum: %ld\n", minCost, mcmf.consumerNum * mcmf.costPerCDN, backup.size());
+	// puts("\n=====Solution======");
+	// mcmf.showSolution();
+	printf("\nminCost: %d/%d cdnNum: %ld\n", minCost, mcmf.consumerNum * mcmf.costPerCDN, backup.size());
 }
 
 void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 {
 	srand(time(0));
 	Signal(SIGALRM, timeOutHandler);
-	alarm(85);
+	alarm(88);
 	// 启动计时器
 	mcmf.loadGraph(topo, line_num);
 	SA();
