@@ -34,7 +34,7 @@ void SA() {
 
 	double T = 20.0, delta = 0.9999; // 初始温度
 
-	while(T > 0.1 && runing) {
+	while(T > 1 && runing) {
 		int u = -1;
 		do {
 			for(auto x: backup) {
@@ -79,11 +79,12 @@ void SA() {
 		T *= delta;
 	}
 
-	printf("Deploy CDN:\n");
+	printf("Deploy CDN(%ld):\n", backup.size());
 	for(int x: backup)
 		printf("%d ", x);
-	puts("");
-	printf("minCost: %d/%d cdnNum: %ld\n", minCost, mcmf.consumerNum * mcmf.costPerCDN, backup.size());
+	puts("\n=====Solution======");
+	mcmf.showSolution();
+	// printf("minCost: %d/%d cdnNum: %ld\n", minCost, mcmf.consumerNum * mcmf.costPerCDN, backup.size());
 }
 
 void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)

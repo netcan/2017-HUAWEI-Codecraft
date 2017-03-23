@@ -57,7 +57,8 @@ class MCMF{
 			n(n), superSource(superSource), superSink(superSink), networkNum(networkNum), edgeNum(edgeNum),
 			consumerNum(consumerNum), costPerCDN(costPerCDN), needFlow(needFlow) {}
 		void AddEdge(int from, int to, int cap, int cost);
-		void showPath();
+		void showPath() const;
+		void showSolution() const;
 		void loadGraph();
 		void loadGraph(char * topo[MAX_EDGE_NUM], int line_num);
 		const char* outputPath();
@@ -72,7 +73,10 @@ class MCMF{
 			path.first.second = flow;
 			if(flow < needFlow) return -1;
 			else {
-				if(path.first.first < solutionPath.first) solutionPath.second =  move(path.second);
+				if(path.first.first < solutionPath.first) {
+					solutionPath.second =  move(path.second);
+					solutionPath.first = path.first.first;
+				}
 				return path.first.first;
 			}
 		}

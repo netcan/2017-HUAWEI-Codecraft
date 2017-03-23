@@ -71,7 +71,7 @@ void MCMF::AddEdge(int from, int to, int cap, int cost) {
 		needFlow += cap;
 }
 
-void MCMF::showPath() {
+void MCMF::showPath() const {
 	if(path.second.empty()) return;
 	int totalFlow = 0;
 	for(auto &x : path.second) {
@@ -83,6 +83,19 @@ void MCMF::showPath() {
 		printf(" flow: %d\n", x[0]);
 	}
 	printf("Flow :%d/%d Cost: %d\n", totalFlow, needFlow, path.first.first);
+}
+
+void MCMF::showSolution() const{
+	int totalFlow = 0;
+	for(const auto &x : solutionPath.second) {
+		for(vector<int>::const_reverse_iterator i = x.rbegin(); i != x.rend() - 1; ++i) {
+			if(i == x.rbegin()) printf("%d", *i);
+			else printf("->%d", *i);
+		}
+		totalFlow += x[0];
+		printf(" flow: %d\n", x[0]);
+	}
+	printf("Flow :%d/%d Cost: %d/%d\n", totalFlow, needFlow, solutionPath.first, costPerCDN * consumerNum);
 }
 
 void MCMF::loadGraph() {
