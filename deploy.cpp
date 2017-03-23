@@ -1,12 +1,11 @@
 #include "deploy.h"
 #include <stdio.h>
 
-typedef void Sigfunc(int);
-char *fileName;
+typedef void (sigFunc)(int);
 bool runing = true;
 
-Sigfunc *
-Signal(int signo, Sigfunc *func) {
+sigFunc *
+Signal(int signo, sigFunc *func) {
 	struct sigaction	act, oact;
 	act.sa_handler = func;
 	sigemptyset(&act.sa_mask);
@@ -18,26 +17,12 @@ Signal(int signo, Sigfunc *func) {
 /* end signal */
 
 void timeOutHandler(int signo) {
-	write_result(mcmf.outputPath(), fileName);
 	runing = false;
 	return;
 }
 
-void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
-{
-	fileName = filename;
-	srand(time(0));
-	Signal(SIGALRM, timeOutHandler);
-	alarm(85);
-	// 启动计时器
-
-	// 开始计算
-	mcmf.loadGraph(topo, line_num);
+void SA() {
 	unordered_set<int> backup, cur;
-	// load graph
-	// mcmf.setCdn(cdn);
-	// mcmf.minCost();
-	// mcmf.showPath();
 
 	for(int u=0; u < mcmf.consumerNum; ++u)
 		backup.insert(mcmf.edges[mcmf.G[u + mcmf.networkNum][0]].to);
@@ -47,12 +32,9 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	backCost = mcmf.minCost();
 	minCost = min(minCost, backCost);
 
-	double T = 20.0;
-	// for(auto x: backup)
-		// printf("%d\n", x);
+	double T = 20.0, delta = 0.9999; // 初始温度
 
-	while(T > 1 && runing) {
-
+	while(T > 0.1 && runing) {
 		int u = -1;
 		do {
 			for(auto x: backup) {
@@ -75,20 +57,11 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 			if(x == u) cur.insert(v);
 			else cur.insert(x);
 		}
-		// puts("=====BACKUP=====");
-		// for(auto x: backup)
-			// printf("%d ", x);
-		// printf("\nu->v: %d->%d\n", u, v);
-		// puts("=====CURRENT====");
-		// for(auto x: cur)
-			// printf("%d ", x);
-		// puts("");
 
 		mcmf.setCdn(cur);
 		curCost = mcmf.minCost();
 
 		if(curCost == -1)  {// 无解
-			// puts("ERROR\n");
 			cur.clear();
 		}
 		else {
@@ -103,10 +76,7 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 
 			minCost = min(minCost, backCost);
 		}
-
-		T *= 0.9999;
-		// printf("T=%lf\n", T);
-		// puts("");
+		T *= delta;
 	}
 
 	printf("Deploy CDN:\n");
@@ -114,4 +84,18 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 		printf("%d ", x);
 	puts("");
 	printf("minCost: %d/%d cdnNum: %ld\n", minCost, mcmf.consumerNum * mcmf.costPerCDN, backup.size());
+}
+
+void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
+{
+	srand(time(0));
+	Signal(SIGALRM, timeOutHandler);
+	alarm(85);
+	// 启动计时器
+	mcmf.loadGraph(topo, line_num);
+	SA();
+
+	// 开始计算
+	write_result(mcmf.outputPath(), filename);
+
 }
