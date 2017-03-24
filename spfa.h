@@ -41,8 +41,7 @@ class MCMF{
 		inline void reset() { // 还原初始状态，删除源点
 			G[superSource].clear();
 			path.second.clear();
-			if(! oldEdges.empty())
-				edges = move(oldEdges);
+			edges = oldEdges;
 		}
 	public:
 		vector<int> G[N]; // 图
@@ -63,10 +62,7 @@ class MCMF{
 		void loadGraph(char * topo[MAX_EDGE_NUM], int line_num);
 		const char* outputPath();
 
-		inline int minCost() {
-			if(oldEdges.empty()) oldEdges = edges; // 备份边集
-			else return path.first.first;
-
+		inline int minCost() { // 调用setCDN后再调用minCost!! 注意不能连续调用多次minCost!!!
 			int flow = 0, cost = 0;
 			while (BellmanFord(superSource, superSink, flow, cost));
 			path.first.first = cost + G[superSource].size() * costPerCDN; // 加上服务器费用

@@ -58,6 +58,8 @@ void SA() {
 			else cur.insert(x);
 		}
 
+		// printf("oldEdge size: %ld\n", mcmf.oldEdges.size());
+		// printf("oldEdge size: %ld\n", mcmf.edges.size());
 		mcmf.setCdn(cur);
 		curCost = mcmf.minCost();
 

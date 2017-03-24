@@ -128,6 +128,7 @@ void MCMF::loadGraph() {
 		solutionPath.second.push_back(move(path));
 	}
 
+	oldEdges = edges;
 }
 
 void MCMF::loadGraph(char * topo[MAX_EDGE_NUM], int line_num) {
@@ -159,6 +160,7 @@ void MCMF::loadGraph(char * topo[MAX_EDGE_NUM], int line_num) {
 		solutionPath.second.push_back(move(path));
 	}
 
+	oldEdges = edges;
 }
 
 const char* MCMF::outputPath() {
