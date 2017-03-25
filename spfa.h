@@ -39,6 +39,8 @@ class MCMF{
 		bool BellmanFord(int s, int t, int &flow, int &cost);
 
 		inline void reset() { // 还原初始状态，删除源点
+			for(size_t i = 0; i < G[superSource].size(); ++i)
+				G[edges[G[superSource][i]].to].pop_back(); // 删除链接超源的边
 			for(int i=G[superSource].size() * 2; i > 0; --i) edges.pop_back(); // 删除超源的边
 			for(size_t i = 0; i < edges.size(); ++i) edges[i].flow = 0; // 重置流量
 			G[superSource].clear();
