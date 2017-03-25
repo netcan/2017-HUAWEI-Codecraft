@@ -21,7 +21,9 @@ void timeOutHandler(int signo) {
 	return;
 }
 
-void SA() {
+int SA(double T = 20.0, double delta = 0.99999) { // 初始温度，迭代系数
+	// double T = 20.0, delta = 0.9999; // 初始温度20, 0.999-0.99999
+
 	unordered_set<int> backup, cur;
 
 	for(int u=0; u < mcmf.consumerNum; ++u)
@@ -32,7 +34,6 @@ void SA() {
 	backCost = mcmf.minCost();
 	minCost = min(minCost, backCost);
 
-	double T = 20.0, delta = 0.99999; // 初始温度0.9999-0.99999
 
 	int iterationCnt = 0;
 	while(T > 0.1 && runing) {
@@ -87,7 +88,8 @@ void SA() {
 		// printf("%d ", x);
 	// puts("\n=====Solution======");
 	// mcmf.showSolution();
-	// printf("\nminCost: %d/%d cdnNum: %ld\n", minCost, mcmf.consumerNum * mcmf.costPerCDN, backup.size());
+	printf("minCost: %d/%d cdnNum: %ld\n\n", minCost, mcmf.consumerNum * mcmf.costPerCDN, backup.size());
+	return minCost;
 }
 
 void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
@@ -98,6 +100,20 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	// 启动计时器
 	mcmf.loadGraph(topo, line_num);
 	SA();
+
+	/*
+	double T = 1.0, delta = 0.9999;
+	double sum = 0;
+	for(; T <= 100.0; T+=1) {
+		for(int i = 0; i < 3; ++i) {
+			alarm(88);
+			sum += SA(T, delta);
+			runing = true;
+		}
+		printf("========== T=%lf delta=%lf avg =%lf ===========\n", T, delta, sum/3.0);
+		sum = 0;
+	}
+	*/
 
 	// 开始计算
 	write_result(mcmf.outputPath(), filename);
