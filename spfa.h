@@ -73,6 +73,11 @@ class MCMF{
 					solutionPath.second =  move(path.second);
 					solutionPath.first = path.first.first;
 				}
+
+				// for(int i=0; i < networkNum + consumerNum +2; ++i) {
+					// for(size_t j = 0; j < G[i].size(); ++j)
+						// printf("%d->%d flow: %d\n", edges[G[i][j]].from, edges[G[i][j]].to, edges[G[i][j]].flow);
+				// }
 				return path.first.first;
 			}
 		}

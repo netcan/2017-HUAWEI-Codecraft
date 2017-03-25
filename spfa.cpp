@@ -56,16 +56,11 @@ bool MCMF::BellmanFord(int s, int t, int &flow, int &cost) {
 
 void MCMF::AddEdge(int from, int to, int cap, int cost) {
 	edges.push_back(Edge(from, to, cap, 0, cost));
-	if(to != superSink && from != superSource)
-		edges.push_back(Edge(to, from, 0, 0, -cost));
+	edges.push_back(Edge(to, from, 0, 0, -cost));
 
 	int m = edges.size();
-	if(from == superSource || to == superSink)
-		G[from].push_back(m - 1);
-	else {
-		G[from].push_back(m - 2);
-		G[to].push_back(m - 1);
-	}
+	G[from].push_back(m - 2);
+	G[to].push_back(m - 1);
 
 	if(from < networkNum && to >= networkNum)  // 网络节点直连消费节点，计算需要的总共流量
 		needFlow += cap;
@@ -93,7 +88,9 @@ void MCMF::showSolution() const{
 			else printf("->%d", *i);
 		}
 		totalFlow += x[0];
-		printf(" flow: %d\n", x[0]);
+		puts("");
+		if(x[0] < 0) printf("flow: %d ==============\n", x[0]);
+		else printf("flow: %d\n", x[0]);
 	}
 	printf("Flow :%d/%d Cost: %d/%d\n", totalFlow, needFlow, solutionPath.first, costPerCDN * consumerNum);
 }
