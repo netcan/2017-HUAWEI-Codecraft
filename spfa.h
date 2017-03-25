@@ -7,6 +7,7 @@
  ************************************************************************/
 
 #include <cstdio>
+#include <assert.h>
 #include <cstring>
 #include <algorithm>
 #include <cctype>
@@ -38,15 +39,16 @@ class MCMF{
 		bool BellmanFord(int s, int t, int &flow, int &cost);
 
 		inline void reset() { // 还原初始状态，删除源点
+			for(int i=G[superSource].size() * 2; i > 0; --i) edges.pop_back(); // 删除超源的边
+			for(size_t i = 0; i < edges.size(); ++i) edges[i].flow = 0; // 重置流量
 			G[superSource].clear();
-			edges = oldEdges;
 		}
 
 		int findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow);
-		void getPath(int cost);
+		void getPath(int cost, bool updatePath = false);
 	public:
 		vector<int> G[N]; // 图
-		vector<Edge> edges, oldEdges; // 边集，边集备份
+		vector<Edge> edges, savedEdges; // 边集，边集备份
 		int networkNum, edgeNum, consumerNum, costPerCDN, needFlow;
 		static const int INF = 0x3f3f3f3f;
 
@@ -68,16 +70,11 @@ class MCMF{
 			cost += G[superSource].size() * costPerCDN;
 
 			if(flow < needFlow) return -1;
-			else {
-				if(cost < solutionPath.first) getPath(cost); // 更新方案
+			else if(cost < solutionPath.first) getPath(cost); // 更新方案
 
-				// for(int i=0; i < networkNum + consumerNum +2; ++i) {
-					// for(size_t j = 0; j < G[i].size(); ++j)
-						// printf("%d->%d flow: %d\n", edges[G[i][j]].from, edges[G[i][j]].to, edges[G[i][j]].flow);
-				// }
-				return cost;
-			}
+			return cost;
 		}
+
 		inline void setCdn(const unordered_set<int> & cdn) {
 			reset();
 			for(int x: cdn)

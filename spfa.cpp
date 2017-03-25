@@ -10,13 +10,16 @@
 
 char MCMF::topo[50000*1000*6];
 
-void MCMF::getPath(int cost) {
+void MCMF::getPath(int cost, bool updatePath) {
 	if(cost < solutionPath.first) {
-		solutionPath.second.clear(); // 记得清理
 		solutionPath.first = cost;
+		savedEdges = edges; // 保存临时可行解的边
+	}
+
+	if(updatePath && ! savedEdges.empty()) {
+		solutionPath.second.clear(); // 记得清理
 		vector<int> tmpPath;
 		bzero(vis, sizeof(vis));
-		solutionPath.second.clear(); // 清空可行解
 		findPath(tmpPath, superSource, INF, INF);
 	}
 }
@@ -35,7 +38,7 @@ int MCMF::findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow) { /
 
 	int tf = totalFlow;
 	for(size_t i = 0; i < G[u].size(); ++i) {
-		Edge &e = edges[G[u][i]];
+		Edge &e = savedEdges[G[u][i]];
 		// printf("%d->%d flow: %d\n", e.from, e.to, e.flow);
 		if(e.flow > 0) { // 流过的流量>0
 			int v = e.to;
@@ -59,7 +62,7 @@ int MCMF::findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow) { /
 
 bool MCMF::BellmanFord(int s, int t, int &flow, int &cost) {
 	memset(d, 0x3f, sizeof(d));
-	memset(vis, 0, sizeof(vis));
+	bzero(vis, sizeof(vis));
 	vis[s] = 1; d[s] = 0; f[s] = MCMF::INF; p[s] = 0;
 
 	queue<int> Q; Q.push(s);
@@ -152,7 +155,6 @@ void MCMF::loadGraph() {
 		solutionPath.second.push_back(move(path));
 	}
 
-	oldEdges = edges;
 }
 
 void MCMF::loadGraph(char * topo[MAX_EDGE_NUM], int line_num) {
@@ -183,11 +185,10 @@ void MCMF::loadGraph(char * topo[MAX_EDGE_NUM], int line_num) {
 		vector<int> path{to, from, bandwidth}; // 直连策略
 		solutionPath.second.push_back(move(path));
 	}
-
-	oldEdges = edges;
 }
 
 const char* MCMF::outputPath() {
+	getPath(solutionPath.first, true); // 放到最后才遍历路径，提高性能
 	char buffer[10];
 	char *pt = topo, *pb = buffer;
 	snprintf(buffer, sizeof(buffer), "%ld\n\n", solutionPath.second.size());

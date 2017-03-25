@@ -84,12 +84,12 @@ void SA() {
 	}
 
 	printf("T=%lf iterationCnt=%d\n", T, iterationCnt);
-	printf("Deploy CDN(%ld):\n", backup.size());
-	for(int x: backup)
-		printf("%d ", x);
+	// printf("Deploy CDN(%ld):\n", backup.size());
+	// for(int x: backup)
+		// printf("%d ", x);
 	// puts("\n=====Solution======");
 	// mcmf.showSolution();
-	printf("\nminCost: %d/%d cdnNum: %ld\n", minCost, mcmf.consumerNum * mcmf.costPerCDN, backup.size());
+	// printf("\nminCost: %d/%d cdnNum: %ld\n", minCost, mcmf.consumerNum * mcmf.costPerCDN, backup.size());
 }
 
 void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
