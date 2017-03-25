@@ -22,7 +22,7 @@ void timeOutHandler(int signo) {
 }
 
 int SA(double T = 20.0, double delta = 0.99999) { // 初始温度，迭代系数
-	// double T = 20.0, delta = 0.9999; // 初始温度20, 0.999-0.99999
+	// double T = 20.0, delta = 0.99999; // 初始温度20, 0.999-0.999999
 
 	unordered_set<int> backup, cur;
 
@@ -94,26 +94,31 @@ int SA(double T = 20.0, double delta = 0.99999) { // 初始温度，迭代系数
 
 void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 {
-	srand(time(0));
+	// srand(time(0));
 	Signal(SIGALRM, timeOutHandler);
-	alarm(88);
 	// 启动计时器
+	alarm(88);
 	mcmf.loadGraph(topo, line_num);
 	SA();
 
+	//- test
 	/*
-	double T = 1.0, delta = 0.9999;
-	double sum = 0;
+	double T = 1.0, delta = 0.99999;
+	double bestT = T, bestDelta = delta;
+	int minCost = MCMF::INF;
+	int cost = 0;
 	for(; T <= 100.0; T+=1) {
-		for(int i = 0; i < 3; ++i) {
-			alarm(88);
-			sum += SA(T, delta);
-			runing = true;
+		alarm(88);
+		if( (cost = SA(T,delta)) < minCost) {
+			minCost = cost;
+			bestT = T;
+			bestDelta = delta;
 		}
-		printf("========== T=%lf delta=%lf avg =%lf ===========\n", T, delta, sum/3.0);
-		sum = 0;
+		printf("bestT = %lf bestDelta = %lf minCost = %d\n", bestT, bestDelta, minCost);
+		runing = true;
 	}
 	*/
+	//- test End
 
 	// 开始计算
 	write_result(mcmf.outputPath(), filename);
