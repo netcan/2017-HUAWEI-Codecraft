@@ -10,6 +10,53 @@
 
 char MCMF::topo[50000*1000*6];
 
+void MCMF::getPath(int cost) {
+	if(cost < solutionPath.first) {
+		solutionPath.second.clear(); // 记得清理
+		solutionPath.first = cost;
+		vector<int> tmpPath;
+		bzero(vis, sizeof(vis));
+		solutionPath.second.clear(); // 清空可行解
+		findPath(tmpPath, superSource, INF, INF);
+	}
+}
+
+int MCMF::findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow) { // dfs，深搜路径，路径上的最小流量，总流量
+	if(vis[u]) return 0;
+	else if(u >= networkNum && u < superSource) { // 到达消费节点，找到一条路径
+		solutionPath.second.push_back(tmpPath);
+		solutionPath.second.back().push_back(u - networkNum); // 转换为消费节点的id
+		solutionPath.second.back().push_back(minFlow);
+		return minFlow;
+	}
+
+	vis[u] = true;
+	if(u != superSource) tmpPath.push_back(u);
+
+	int tf = totalFlow;
+	for(size_t i = 0; i < G[u].size(); ++i) {
+		Edge &e = edges[G[u][i]];
+		// printf("%d->%d flow: %d\n", e.from, e.to, e.flow);
+		if(e.flow > 0) { // 流过的流量>0
+			int v = e.to;
+			if(!vis [v]) {
+				if(totalFlow > 0) {
+					int t = findPath(tmpPath, v,
+							min(minFlow, min(totalFlow, e.flow)),
+							min(totalFlow, e.flow));
+					e.flow -= t;
+					totalFlow -= t;
+				}
+				else break;
+			}
+		}
+	}
+
+	vis[u] = false;
+	tmpPath.pop_back();
+	return tf;
+}
+
 bool MCMF::BellmanFord(int s, int t, int &flow, int &cost) {
 	memset(d, 0x3f, sizeof(d));
 	memset(vis, 0, sizeof(vis));
@@ -41,16 +88,11 @@ bool MCMF::BellmanFord(int s, int t, int &flow, int &cost) {
 	cost += d[t] * f[t];
 
 	int u = t;
-	vector<int> argumentPath;
-	argumentPath.push_back(f[t]);
 	while (u != s) {
 		edges[p[u]].flow += f[t];
 		edges[p[u] ^ 1].flow -= f[t];
 		u = edges[p[u]].from;
-		if(u != s) argumentPath.push_back(u < networkNum? u: u - networkNum);
 	}
-	path.second.push_back(move(argumentPath));
-
 	return true;
 }
 
@@ -66,31 +108,16 @@ void MCMF::AddEdge(int from, int to, int cap, int cost) {
 		needFlow += cap;
 }
 
-void MCMF::showPath() const {
-	if(path.second.empty()) return;
-	int totalFlow = 0;
-	for(auto &x : path.second) {
-		for(vector<int>::const_reverse_iterator i = x.rbegin(); i != x.rend() - 1; ++i) {
-			if(i == x.rbegin()) printf("%d", *i);
-			else printf("->%d", *i);
-		}
-		totalFlow += x[0];
-		printf(" flow: %d\n", x[0]);
-	}
-	printf("Flow :%d/%d Cost: %d\n", totalFlow, needFlow, path.first.first);
-}
 
 void MCMF::showSolution() const{
 	int totalFlow = 0;
 	for(const auto &x : solutionPath.second) {
-		for(vector<int>::const_reverse_iterator i = x.rbegin(); i != x.rend() - 1; ++i) {
-			if(i == x.rbegin()) printf("%d", *i);
+		for(vector<int>::const_iterator i = x.begin(); i != x.end() - 1; ++i) {
+			if(i == x.begin()) printf("%d", *i);
 			else printf("->%d", *i);
 		}
-		totalFlow += x[0];
-		puts("");
-		if(x[0] < 0) printf("flow: %d ==============\n", x[0]);
-		else printf("flow: %d\n", x[0]);
+		totalFlow += x.back();
+		printf(" flow: %d\n", x.back());
 	}
 	printf("Flow :%d/%d Cost: %d/%d\n", totalFlow, needFlow, solutionPath.first, costPerCDN * consumerNum);
 }
@@ -121,7 +148,7 @@ void MCMF::loadGraph() {
 		AddEdge(to, from + networkNum, bandwidth, 0);
 		AddEdge(from + networkNum, superSink, bandwidth, 0);
 
-		vector<int> path{bandwidth, from, to};
+		vector<int> path{to, from, bandwidth}; // 直连策略
 		solutionPath.second.push_back(move(path));
 	}
 
@@ -132,7 +159,7 @@ void MCMF::loadGraph(char * topo[MAX_EDGE_NUM], int line_num) {
 	sscanf(topo[0], "%d%d%d", &networkNum, &edgeNum, &consumerNum);
 	sscanf(topo[2], "%d", &costPerCDN);
 
-	solutionPath.first = consumerNum * costPerCDN;
+	solutionPath.first = consumerNum * costPerCDN; // asdf
 
 
 	superSource = consumerNum + networkNum; // 超级源点、汇点
@@ -153,7 +180,7 @@ void MCMF::loadGraph(char * topo[MAX_EDGE_NUM], int line_num) {
 		AddEdge(to, from + networkNum, bandwidth, 0);
 		AddEdge(from + networkNum, superSink, bandwidth, 0);
 
-		vector<int> path{bandwidth, from, to};
+		vector<int> path{to, from, bandwidth}; // 直连策略
 		solutionPath.second.push_back(move(path));
 	}
 
@@ -166,8 +193,8 @@ const char* MCMF::outputPath() {
 	snprintf(buffer, sizeof(buffer), "%ld\n\n", solutionPath.second.size());
 	while(*pb && (*pt++ = *pb++));
 	for(auto &x: solutionPath.second) {
-		for(auto it = x.rbegin(); it != x.rend(); ++it) {
-			snprintf(buffer, sizeof(buffer), it == x.rbegin() ? "%d":" %d", *it);
+		for(auto it = x.begin(); it != x.end(); ++it) {
+			snprintf(buffer, sizeof(buffer), it == x.begin() ? "%d":" %d", *it);
 			pb = buffer;
 			while(*pb && (*pt++ = *pb++));
 		}

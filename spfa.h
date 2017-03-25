@@ -30,19 +30,20 @@ class MCMF{
 		static const int N = 1500+5;
 		static char topo[50000*1000*6];
 
-		int n, superSource, superSink; // 点数，超级源点/汇点，需要的流量
+		int superSource, superSink; // 总节点数，超级源点/汇点，需要的流量
 		int d[N], f[N], p[N]; // 最小费用，当前流量，父节点（增广路径），中间变量
 		bool vis[N]; // 标记指针
-		pair<pair<int, int>, vector<vector<int>>> path; // 费用/流量，流量->路径
 		pair<int, vector<vector<int>>> solutionPath; // 当前最优费用，路径
 
 		bool BellmanFord(int s, int t, int &flow, int &cost);
 
 		inline void reset() { // 还原初始状态，删除源点
 			G[superSource].clear();
-			path.second.clear();
 			edges = oldEdges;
 		}
+
+		int findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow);
+		void getPath(int cost);
 	public:
 		vector<int> G[N]; // 图
 		vector<Edge> edges, oldEdges; // 边集，边集备份
@@ -52,11 +53,10 @@ class MCMF{
 		MCMF() {
 			needFlow = 0;
 		};
-		MCMF(int n, int superSource, int superSink, int networkNum, int edgeNum, int consumerNum ,int costPerCDN, int needFlow = 0):
-			n(n), superSource(superSource), superSink(superSink), networkNum(networkNum), edgeNum(edgeNum),
+		MCMF(int superSource, int superSink, int networkNum, int edgeNum, int consumerNum ,int costPerCDN, int needFlow = 0):
+			superSource(superSource), superSink(superSink), networkNum(networkNum), edgeNum(edgeNum),
 			consumerNum(consumerNum), costPerCDN(costPerCDN), needFlow(needFlow) {}
 		void AddEdge(int from, int to, int cap, int cost);
-		void showPath() const;
 		void showSolution() const;
 		void loadGraph();
 		void loadGraph(char * topo[MAX_EDGE_NUM], int line_num);
@@ -65,20 +65,17 @@ class MCMF{
 		inline int minCost() { // 调用setCDN后再调用minCost!! 注意不能连续调用多次minCost!!!
 			int flow = 0, cost = 0;
 			while (BellmanFord(superSource, superSink, flow, cost));
-			path.first.first = cost + G[superSource].size() * costPerCDN; // 加上服务器费用
-			path.first.second = flow;
+			cost += G[superSource].size() * costPerCDN;
+
 			if(flow < needFlow) return -1;
 			else {
-				if(path.first.first < solutionPath.first) {
-					solutionPath.second =  move(path.second);
-					solutionPath.first = path.first.first;
-				}
+				if(cost < solutionPath.first) getPath(cost); // 更新方案
 
 				// for(int i=0; i < networkNum + consumerNum +2; ++i) {
 					// for(size_t j = 0; j < G[i].size(); ++j)
 						// printf("%d->%d flow: %d\n", edges[G[i][j]].from, edges[G[i][j]].to, edges[G[i][j]].flow);
 				// }
-				return path.first.first;
+				return cost;
 			}
 		}
 		inline void setCdn(const unordered_set<int> & cdn) {

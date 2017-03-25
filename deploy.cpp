@@ -34,6 +34,7 @@ void SA() {
 
 	double T = 20.0, delta = 0.99999; // 初始温度0.9999-0.99999
 
+	int iterationCnt = 0;
 	while(T > 0.1 && runing) {
 		int u = -1;
 		do {
@@ -62,6 +63,7 @@ void SA() {
 		// printf("oldEdge size: %ld\n", mcmf.edges.size());
 		mcmf.setCdn(cur);
 		curCost = mcmf.minCost();
+		++iterationCnt;
 
 		if(curCost == -1)  {// 无解
 			cur.clear();
@@ -81,7 +83,7 @@ void SA() {
 		T *= delta;
 	}
 
-	printf("T=%lf\n", T);
+	printf("T=%lf iterationCnt=%d\n", T, iterationCnt);
 	printf("Deploy CDN(%ld):\n", backup.size());
 	for(int x: backup)
 		printf("%d ", x);
