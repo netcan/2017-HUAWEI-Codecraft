@@ -62,10 +62,11 @@ bool MCMF::BellmanFord(int s, int t, int &flow, int &cost) {
 	bzero(vis, sizeof(vis));
 	vis[s] = 1; d[s] = 0; f[s] = MCMF::INF; p[s] = 0;
 
-	queue<int> Q; Q.push(s);
+	queue.reset();
+	queue.push(s);
 
-	while (!Q.empty()) {
-		int u = Q.front(); Q.pop();
+	while (!queue.empty()) {
+		int u = queue.front(); queue.pop();
 		vis[u] = 0;
 
 		for (size_t i = 0; i < G[u].size(); i++) {
@@ -76,7 +77,7 @@ bool MCMF::BellmanFord(int s, int t, int &flow, int &cost) {
 				f[e.to] = min(f[u], e.cap - e.flow);
 				if (!vis[e.to]) {
 					vis[e.to] = true;
-					Q.push(e.to);
+					queue.push(e.to);
 				}
 			}
 		}

@@ -11,7 +11,6 @@
 #include <cstring>
 #include <algorithm>
 #include <cctype>
-#include <queue>
 #include <cstdlib>
 #include <vector>
 #include <unordered_set>
@@ -28,8 +27,31 @@ class MCMF{
 			Edge() {}
 			Edge(int from, int to, int cap, int flow, int cost):from(from), to(to), cap(cap), flow(flow), cost(cost) {}
 		};
-		static const int N = 1500+5;
+		static const int N = 1600+5;
 		static char topo[50000*1000*6];
+
+		struct {
+			int q[N];
+			int tail, head;
+			void reset() {
+				tail = head = 0;
+			}
+			bool empty() {
+				return tail == head;
+			}
+			void push(int x) {
+				q[tail] = x;
+				tail = (tail + 1) % N;
+			}
+			void pop() {
+				if(empty()) return;
+				head = (head + 1) % N;
+			}
+			int front() {
+				return q[head];
+			}
+
+		} queue;
 
 		int superSource, superSink; // 总节点数，超级源点/汇点，需要的流量
 		int d[N], f[N], p[N]; // 最小费用，当前流量，父节点（增广路径），中间变量

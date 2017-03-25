@@ -94,7 +94,7 @@ int SA(double T = 20.0, double delta = 0.99999) { // 初始温度，迭代系数
 
 void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 {
-	// srand(time(0));
+	srand(time(0));
 	Signal(SIGALRM, timeOutHandler);
 	// 启动计时器
 	alarm(88);
