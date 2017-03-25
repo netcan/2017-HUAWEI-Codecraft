@@ -10,18 +10,15 @@
 
 char MCMF::topo[50000*1000*6];
 
-void MCMF::getPath(int cost, bool updatePath) {
+void MCMF::getPath(int cost) {
 	if(cost < solutionPath.first) {
 		solutionPath.first = cost;
-		savedEdges = edges; // 保存临时可行解的边
-	}
-
-	if(updatePath && ! savedEdges.empty()) {
 		solutionPath.second.clear(); // 记得清理
 		vector<int> tmpPath;
 		bzero(vis, sizeof(vis));
 		findPath(tmpPath, superSource, INF, INF);
 	}
+
 }
 
 int MCMF::findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow) { // dfs，深搜路径，路径上的最小流量，总流量
@@ -38,7 +35,7 @@ int MCMF::findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow) { /
 
 	int tf = totalFlow;
 	for(size_t i = 0; i < G[u].size(); ++i) {
-		Edge &e = savedEdges[G[u][i]];
+		Edge &e = edges[G[u][i]];
 		// printf("%d->%d flow: %d\n", e.from, e.to, e.flow);
 		if(e.flow > 0) { // 流过的流量>0
 			int v = e.to;
@@ -188,7 +185,7 @@ void MCMF::loadGraph(char * topo[MAX_EDGE_NUM], int line_num) {
 }
 
 const char* MCMF::outputPath() {
-	getPath(solutionPath.first, true); // 放到最后才遍历路径，提高性能
+	// getPath(solutionPath.first, true); // 放到最后才遍历路径，提高性能
 	char buffer[10];
 	char *pt = topo, *pb = buffer;
 	snprintf(buffer, sizeof(buffer), "%ld\n\n", solutionPath.second.size());

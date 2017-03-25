@@ -45,10 +45,10 @@ class MCMF{
 		}
 
 		int findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow);
-		void getPath(int cost, bool updatePath = false);
+		void getPath(int cost);
 	public:
 		vector<int> G[N]; // 图
-		vector<Edge> edges, savedEdges; // 边集，边集备份
+		vector<Edge> edges; // 边集，边集备份
 		int networkNum, edgeNum, consumerNum, costPerCDN, needFlow;
 		static const int INF = 0x3f3f3f3f;
 
