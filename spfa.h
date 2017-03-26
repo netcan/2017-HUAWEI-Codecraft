@@ -70,6 +70,22 @@ class MCMF{
 
 		int findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow);
 		void getPath(int cost);
+		inline int minCost() { // 调用setCDN后再调用minCost!! 注意不能连续调用多次minCost!!!
+			int flow = 0, cost = 0;
+			while (BellmanFord(superSource, superSink, flow, cost));
+			cost += G[superSource].size() * costPerCDN;
+
+			if(flow < needFlow) return -1;
+			else if(cost < solutionPath.first) getPath(cost); // 更新方案
+
+			return cost;
+		}
+
+		inline void setCdn(const unordered_set<int> & cdn) {
+			reset();
+			for(int x: cdn)
+				AddEdge(superSource, x, MCMF::INF, 0);
+		}
 	public:
 		vector<int> G[N]; // 图
 		vector<Edge> edges; // 边集，边集备份
@@ -88,21 +104,10 @@ class MCMF{
 		void loadGraph(char * topo[MAX_EDGE_NUM], int line_num);
 		const char* outputPath();
 
-		inline int minCost() { // 调用setCDN后再调用minCost!! 注意不能连续调用多次minCost!!!
-			int flow = 0, cost = 0;
-			while (BellmanFord(superSource, superSink, flow, cost));
-			cost += G[superSource].size() * costPerCDN;
 
-			if(flow < needFlow) return -1;
-			else if(cost < solutionPath.first) getPath(cost); // 更新方案
-
-			return cost;
-		}
-
-		inline void setCdn(const unordered_set<int> & cdn) {
-			reset();
-			for(int x: cdn)
-				AddEdge(superSource, x, MCMF::INF, 0);
+		inline int minCost_Set(const unordered_set<int> &cdn) {
+			setCdn(cdn);
+			return minCost();
 		}
 
 };
