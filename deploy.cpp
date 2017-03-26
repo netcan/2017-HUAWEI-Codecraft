@@ -21,10 +21,10 @@ void timeOutHandler(int signo) {
 	return;
 }
 
-unordered_set<int> SA(unordered_set<int>init = {}, int times = MCMF::INF,double T = 20.0, double delta = 0.99999) { // 模拟退火，初始温度，迭代系数
+void SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999) { // 模拟退火，初始温度，迭代系数
 	// double T = 20.0, delta = 0.99999; // 初始温度20, 0.999-0.999999
 
-	unordered_set<int> backup, cur, best;
+	unordered_set<int> backup, cur;
 
 	if(init.empty()) {
 		for(int u=0; u < mcmf.consumerNum; ++u)  // 初始位置
@@ -37,7 +37,7 @@ unordered_set<int> SA(unordered_set<int>init = {}, int times = MCMF::INF,double 
 
 
 	int iterationCnt = 0;
-	while(T > 0.1 && runing && iterationCnt < times) {
+	while(runing && T > 0.1) {
 		int u = -1;
 		do {
 			for(auto x: backup) {
@@ -76,12 +76,7 @@ unordered_set<int> SA(unordered_set<int>init = {}, int times = MCMF::INF,double 
 			} else {
 				cur.clear();
 			}
-
 			minCost = min(minCost, backCost);
-			if(minCost > backCost) {
-				minCost = backCost;
-				best = backup;
-			}
 	 	}
 		T *= delta;
 	}
@@ -92,8 +87,7 @@ unordered_set<int> SA(unordered_set<int>init = {}, int times = MCMF::INF,double 
 		// printf("%d ", x);
 	// puts("\n=====Solution======");
 	// mcmf.showSolution();
-	printf("minCost: %d/%d cdnNum: %ld\n\n", minCost, mcmf.consumerNum * mcmf.costPerCDN, best.size());
-	return best;
+	printf("minCost: %d/%d cdnNum: %ld\n\n", minCost, mcmf.consumerNum * mcmf.costPerCDN, backup.size());
 }
 
 
@@ -163,9 +157,8 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	// 启动计时器
 	alarm(88);
 	mcmf.loadGraph(topo, line_num);
-	SA();
 	// SA(Tabu({}, 20));
-	// Tabu(SA({}, 10000));
+	SA();
 
 	//- test
 	/*
