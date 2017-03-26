@@ -30,8 +30,7 @@ int SA(double T = 20.0, double delta = 0.99999) { // 初始温度，迭代系数
 		backup.insert(mcmf.edges[mcmf.G[u + mcmf.networkNum][0]].to);
 
 	int minCost = MCMF::INF, backCost = MCMF::INF, curCost = MCMF::INF;
-	mcmf.setCdn(backup);
-	backCost = mcmf.minCost();
+	backCost = mcmf.minCost_Set(backup);
 	minCost = min(minCost, backCost);
 
 
@@ -60,8 +59,7 @@ int SA(double T = 20.0, double delta = 0.99999) { // 初始温度，迭代系数
 			else cur.insert(x);
 		}
 
-		mcmf.setCdn(cur);
-		curCost = mcmf.minCost();
+		curCost = mcmf.minCost_Set(cur);
 		++iterationCnt;
 
 		if(curCost == -1)  {// 无解
