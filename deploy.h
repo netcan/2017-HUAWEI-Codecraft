@@ -5,6 +5,8 @@
 #include "spfa.h"
 #include <signal.h>
 #include <unistd.h>
+#include <list>
+#include <algorithm>
 #include <cmath>
 #include <sys/types.h>
 #include <sys/wait.h>

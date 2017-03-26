@@ -105,7 +105,7 @@ class MCMF{
 		const char* outputPath();
 
 
-		int minCost_Set(const unordered_set<int> &cdn) {
+		inline int minCost_Set(const unordered_set<int> &cdn) {
 			setCdn(cdn);
 			return minCost();
 		}
