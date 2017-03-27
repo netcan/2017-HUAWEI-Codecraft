@@ -26,15 +26,18 @@ void timeOutHandler(int signo) {
 //- GA begin
 int fitness(const Gene &p) { // 适应性
 	int cost = mcmf.minCost_Set(p.to_Set());
-	if(cost == -1) return -1;
-	else return mcmf.networkNum * mcmf.costPerCDN - cost;
+	// printf("cost = %d\n", cost);
+	int Total = mcmf.networkNum * mcmf.costPerCDN;
+	if(cost == -1) return 1;
+	else return max(1, Total - cost);
 }
 
-int select(const double *P, int len) {
+// 返回一个选中基因的下标
+int select(const vector<Gene> & genes) {
 	double R = Rand.Random_Real(0, 1);
 	double s = 0.0;
-	for(int i = 0; i < len; ++i) {
-		s += P[i];
+	for(size_t i = 0; i < genes.size(); ++i) {
+		s += genes[i].P;
 		// printf("%f/%f\n", s, R);
 		if(s >= R) {
 			// printf("select %d\n", i);
@@ -44,60 +47,70 @@ int select(const double *P, int len) {
 	return 0;
 }
 
-void GA(int geneCnt = 10) { // 遗传算法
+void GA(int geneCnt = 50, double crossP = 0.95, double mutationP = 0.15) { // 遗传算法
 	int iterationCnt = 0;
 	int minCost = MCMF::INF;
 
 	vector<Gene> genes(geneCnt);
 	vector<Gene> next_genes(geneCnt);
-	for(int i = 0; i < geneCnt; ++i)
+	priority_queue<Gene> que; // 最大堆选出最强的那20条染色体
+	unordered_set<int> inital;
+	// 初始化基因
+	for(int u=0; u < mcmf.consumerNum; ++u)  // 初始位置
+		inital.insert(mcmf.edges[mcmf.G[u + mcmf.networkNum][0]].to);
+	genes[0].set(inital, mcmf.networkNum);
+
+	for(int i = 1; i < geneCnt; ++i)
 		genes[i].reset(mcmf.networkNum);
 
-	while(runing) {
-		// 初始化基因
+
+	while(runing && iterationCnt < 300) {
 
 		// for(int i = 0; i < geneCnt; ++i) {
 			// printf("基因型%d: ", i);
 			// genes[i].show();
 		// }
 
-		// 选择运算
-		double P[geneCnt];
-		int f[geneCnt], sum = 0;
+		// 适应度计算
+		int sum = 0;
 		for(int i = 0; i < geneCnt; ++i) {
-			while( (f[i] = fitness(genes[i])) == -1) genes[i].reset(mcmf.networkNum) ;
-			// printf("f[%d] = %d\n", i, f[i]);
-			minCost = min(minCost, mcmf.networkNum * mcmf.costPerCDN - f[i]);
-			sum += f[i];
-		}
-		for(int i = 0; i < geneCnt; ++i) {
-			P[i] = f[i]*1.0 / sum;
-			// printf("P[%d] = %lf\n", i, P[i]);
+			genes[i].fitness = fitness(genes[i]);
+			sum += genes[i].fitness;
+			minCost = min(minCost, mcmf.networkNum * mcmf.costPerCDN - genes[i].fitness);
+			que.push(genes[i]); // 最大堆
 		}
 
+		for(int i = 0; i < geneCnt; ++i)
+			genes[i].P = genes[i].fitness*1.0 / sum;
+
+		next_genes.clear();
+
+		// 选择
 		for(int i = 0; i < geneCnt; ++i) {
-			next_genes[i] = genes[select(P, geneCnt)];
+			if(que.size() > geneCnt * 0.6) next_genes[i] = que.top();
+			else next_genes[i] = genes[select(genes)];
+			que.pop();
 		}
+
+		for(int i = 0; i < geneCnt; ++i) // 复制
+			genes[i] = next_genes[i];
 
 		// XXOO
 		for(int i = 0; i < geneCnt; i+=2)
-			if(Rand.Random_Real(0,1) < 0.95)  // 交叉率，0.95
+			if(Rand.Random_Real(0, 1) < crossP)
 				genes[i] * genes[i+1];
 
 		// 突变
 		for(int i = 0; i < geneCnt; ++i)
-			if(Rand.Random_Real(0,1) < 0.05) {// 突变率，0.05
-				next_genes[i].mutation();
-				puts("Mutation!");
-			}
+			if(Rand.Random_Real(0, 1) < mutationP)
+				genes[i].mutation();
 
-		genes = next_genes;
 		++iterationCnt;
-		printf("iterationCnt: %d minCost = %d\n", iterationCnt, minCost);
+		// printf("iterationCnt: %d minCost = %d\n", iterationCnt, minCost);
 		// break;
 	}
 
-	mcmf.showSolution();
+	// mcmf.showSolution();
 	printf("iterationCnt=%d\n", iterationCnt);
 	printf("minCost: %d/%d\n\n", minCost, mcmf.consumerNum * mcmf.costPerCDN);
 }
@@ -241,8 +254,10 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	alarm(88);
 	mcmf.loadGraph(topo, line_num);
 	// SA(Tabu({}, 20));
-	SA();
+	// SA();
 	// GA();
+	if(mcmf.networkNum < 200) GA();
+	else SA();
 
 	//- test
 	/*

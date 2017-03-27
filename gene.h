@@ -9,6 +9,8 @@
 #ifndef __GENE__
 #define __GENE__
 #include <cstdio>
+#include <vector>
+#include <algorithm>
 #include <ctime>
 #include <bitset>
 #include <unordered_set>
@@ -20,7 +22,9 @@ class Gene {
 		int len; // 长度，0-1200
 		bitset<1024> code;
 	public:
-		Gene() = default;
+		int fitness; // 适应度
+		double P; // 选中概率
+		Gene(): len(0), code(), fitness(0), P(0) {}
 		Gene(int len): len(len) {
 			for(int i = 0; i < len; ++i)
 				code[i] = Rand.Random_Int(0, 1);
@@ -43,9 +47,27 @@ class Gene {
 					b.code[i] = !b.code[i];
 				}
 		}
+		inline void set(unordered_set<int> &s, int len) {
+			this->len = len;
+			std::vector<int> ss(s.begin(), s.end());
+			sort(ss.begin(), ss.end());
+			size_t j = 0;
+			for(int i = 0; i < len && j < ss.size(); ++i) {
+				if(ss[j] == i) {
+					code[i] = 1;
+					++j;
+				}
+			}
+		}
+
+		inline bool operator<(const Gene &b) const { // 最小堆用
+			return this->fitness < b.fitness;
+		}
 
 		inline void operator=(const Gene &b) {
 			this->len = b.len;
+			this->fitness = b.fitness;
+			this->P = b.P;
 			code = b.code;
 		}
 		inline bool operator==(const Gene &b)const {
@@ -66,6 +88,7 @@ class Gene {
 			}
 			puts("");
 		}
+
 		inline unordered_set<int> to_Set() const {
 			unordered_set<int> S;
 			for(int i = 0; i < len; ++i)

@@ -8,6 +8,7 @@
 #include <list>
 #include <algorithm>
 #include <cmath>
+#include <queue>
 #include <sys/types.h>
 #include <sys/wait.h>
 
