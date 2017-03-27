@@ -1,5 +1,7 @@
 #include "deploy.h"
 #include <stdio.h>
+#include "random.h"
+#include "gene.h"
 
 typedef void (sigFunc)(int);
 bool runing = true;
@@ -21,6 +23,88 @@ void timeOutHandler(int signo) {
 	return;
 }
 
+//- GA begin
+int fitness(const Gene &p) { // 适应性
+	int cost = mcmf.minCost_Set(p.to_Set());
+	if(cost == -1) return -1;
+	else return mcmf.networkNum * mcmf.costPerCDN - cost;
+}
+
+int select(const double *P, int len) {
+	double R = Rand.Random_Real(0, 1);
+	double s = 0.0;
+	for(int i = 0; i < len; ++i) {
+		s += P[i];
+		// printf("%f/%f\n", s, R);
+		if(s >= R) {
+			// printf("select %d\n", i);
+			return i;
+		}
+	}
+	return 0;
+}
+
+void GA(int geneCnt = 10) { // 遗传算法
+	int iterationCnt = 0;
+	int minCost = MCMF::INF;
+
+	vector<Gene> genes(geneCnt);
+	vector<Gene> next_genes(geneCnt);
+	for(int i = 0; i < geneCnt; ++i)
+		genes[i].reset(mcmf.networkNum);
+
+	while(runing) {
+		// 初始化基因
+
+		// for(int i = 0; i < geneCnt; ++i) {
+			// printf("基因型%d: ", i);
+			// genes[i].show();
+		// }
+
+		// 选择运算
+		double P[geneCnt];
+		int f[geneCnt], sum = 0;
+		for(int i = 0; i < geneCnt; ++i) {
+			while( (f[i] = fitness(genes[i])) == -1) genes[i].reset(mcmf.networkNum) ;
+			// printf("f[%d] = %d\n", i, f[i]);
+			minCost = min(minCost, mcmf.networkNum * mcmf.costPerCDN - f[i]);
+			sum += f[i];
+		}
+		for(int i = 0; i < geneCnt; ++i) {
+			P[i] = f[i]*1.0 / sum;
+			// printf("P[%d] = %lf\n", i, P[i]);
+		}
+
+		for(int i = 0; i < geneCnt; ++i) {
+			next_genes[i] = genes[select(P, geneCnt)];
+		}
+
+		// XXOO
+		for(int i = 0; i < geneCnt; i+=2)
+			if(Rand.Random_Real(0,1) < 0.95)  // 交叉率，0.95
+				genes[i] * genes[i+1];
+
+		// 突变
+		for(int i = 0; i < geneCnt; ++i)
+			if(Rand.Random_Real(0,1) < 0.05) {// 突变率，0.05
+				next_genes[i].mutation();
+				puts("Mutation!");
+			}
+
+		genes = next_genes;
+		++iterationCnt;
+		printf("iterationCnt: %d minCost = %d\n", iterationCnt, minCost);
+		// break;
+	}
+
+	mcmf.showSolution();
+	printf("iterationCnt=%d\n", iterationCnt);
+	printf("minCost: %d/%d\n\n", minCost, mcmf.consumerNum * mcmf.costPerCDN);
+}
+
+
+//- GA end
+
 void SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999) { // 模拟退火，初始温度，迭代系数
 	// double T = 20.0, delta = 0.99999; // 初始温度20, 0.999-0.999999
 
@@ -41,7 +125,7 @@ void SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999) { 
 		int u = -1;
 		do {
 			for(auto x: backup) {
-				if(rand() < RAND_MAX * 1.0 / mcmf.networkNum) {
+				if(Rand.Random_Real(0, 1) <  1.0 / mcmf.networkNum) {
 					u = x;
 					break;
 				}
@@ -52,7 +136,7 @@ void SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999) { 
 
 		do {
 			for(selectEdge = 0; (selectEdge < (int)mcmf.G[u].size() - 1) &&
-					rand() > RAND_MAX * 1.0 / mcmf.G[u].size(); ++selectEdge);
+					Rand.Random_Real(0, 1) > 1.0 / mcmf.G[u].size(); ++selectEdge);
 		}
 		while( (v = mcmf.edges[mcmf.G[u][selectEdge]].to) >= mcmf.networkNum);
 
@@ -70,7 +154,7 @@ void SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999) { 
 		else {
 			int dC = curCost - backCost;
 			// printf("dC: %d\n", dC);
-			if(dC < 0 || exp(-dC / T) * RAND_MAX > rand())  {// 接受
+			if(dC < 0 || exp(-dC / T) > Rand.Random_Real(0, 1))  {// 接受
 				backup = move(cur);
 				backCost = curCost;
 			} else {
@@ -152,13 +236,13 @@ unordered_set<int> Tabu(unordered_set<int>init = {}, int times = MCMF::INF) { //
 
 void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 {
-	srand(time(0));
 	Signal(SIGALRM, timeOutHandler);
 	// 启动计时器
 	alarm(88);
 	mcmf.loadGraph(topo, line_num);
 	// SA(Tabu({}, 20));
 	SA();
+	// GA();
 
 	//- test
 	/*

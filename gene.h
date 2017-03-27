@@ -17,11 +17,16 @@ using namespace std;
 
 class Gene {
 	private:
-		const int len; // 长度，0-1200
+		int len; // 长度，0-1200
 		bitset<1024> code;
 	public:
+		Gene() = default;
 		Gene(int len): len(len) {
-			discrete_distribution<int> distribution{1, 1};
+			for(int i = 0; i < len; ++i)
+				code[i] = Rand.Random_Int(0, 1);
+		}
+		inline void reset(int len) {
+			this->len = len;
 			for(int i = 0; i < len; ++i)
 				code[i] = Rand.Random_Int(0, 1);
 		}
@@ -30,7 +35,7 @@ class Gene {
 			int end = Rand.Random_Int(1, len); // 交换的位置，交换一边就行了，因为另一边不动，这里交换左边
 			int begin = Rand.Random_Int(0, end - 1);
 			// int loc = 12;
-			printf("[%d, %d)\n", begin, end);
+			// printf("len = %d range = [%d, %d)\n", len, begin, end);
 			//
 			for(int i = begin; i < end; ++i)
 				if(code[i] != b.code[i]) {
@@ -39,21 +44,29 @@ class Gene {
 				}
 		}
 
+		inline void operator=(const Gene &b) {
+			this->len = b.len;
+			code = b.code;
+		}
+		inline bool operator==(const Gene &b)const {
+			return code == b.code;
+		}
+
 		inline void mutation(int loc = -1) { // 突变，[0, len)
 			if(loc == -1) loc = Rand.Random_Int(0, len - 1);
 			else if(loc >= len) return;
-			printf("loc = %d\n", loc);
+			// printf("loc = %d\n", loc);
 			code[loc] = !code[loc];
 		}
 
-		inline void show() {
+		inline void show() const {
 			for(int i = 0; i < len; ++i) {
 				if(i != 0 && i % 8 == 0) printf(",");
 				printf(code[i]?"1":"0");
 			}
 			puts("");
 		}
-		inline unordered_set<int> to_Set() {
+		inline unordered_set<int> to_Set() const {
 			unordered_set<int> S;
 			for(int i = 0; i < len; ++i)
 				if(code[i]) S.insert(i);
