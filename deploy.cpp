@@ -23,7 +23,7 @@ void timeOutHandler(int signo) {
 	return;
 }
 
-//- GA begin
+//- GA begin，该算法已被SAGA替代！！！
 int fitness(const Gene &p) { // 适应性
 	int cost = mcmf.minCost_Set(p.to_Set());
 	// printf("cost = %d\n", cost);
@@ -214,6 +214,7 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99, int
 
 
 	int iterationCnt = 0;
+	Gene elite; // 精英基因
 	while(runing && T > 0.1) {
 		next_genes.clear();
 
@@ -257,7 +258,11 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99, int
 					genes[idx].fitness = fj;
 				} else
 					genes[idx].fitness = fi;
-				fmin = min(fmin, fj);
+
+				if(fmin > fj) {
+					fmin = fj;
+					elite = genes[idx];
+				}
 			} else { // 无解，不接受
 				genes[idx].fitness = (fi == -1?mcmf.networkNum * mcmf.costPerCDN:fi);
 			}
@@ -275,7 +280,8 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99, int
 			genes[idx].P = genes[idx].fitness / sum;
 
 		// 轮盘赌选择
-		for(int idx = 0; idx < geneCnt; ++idx)
+		next_genes[0] = elite; // 精英
+		for(int idx = 1; idx < geneCnt; ++idx)
 			next_genes[idx] = genes[select(genes)];
 
 		for(int idx = 0; idx < geneCnt; ++idx)
@@ -295,7 +301,7 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99, int
 		T *= delta;
 
 		++iterationCnt;
-		printf("T=%lf iterationCnt=%d minCost = %d\n", T, iterationCnt, minCost);
+		// printf("T=%lf iterationCnt=%d minCost = %d\n", T, iterationCnt, minCost);
 	}
 
 	printf("T=%lf iterationCnt=%d\n", T, iterationCnt);
@@ -373,9 +379,9 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	// SA(Tabu({}, 20));
 	// SA();
 	// GA();
-	// SAGA();
-	if(mcmf.networkNum < 200) SAGA();
-	else SA();
+	SAGA();
+	// if(mcmf.networkNum < 200) SAGA();
+	// else SA();
 
 
 	//- test
