@@ -215,11 +215,11 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99, int
 
 	int iterationCnt = 0;
 	Gene elite; // 精英基因
-	while(runing && T > 0.1) {
+	while(T > 0.1) {
 		next_genes.clear();
 
 		int fmin = MCMF::INF;
-		for(int idx = 0; idx < geneCnt; ++idx) {
+		for(int idx = 0; runing && idx < geneCnt; ++idx) {
 			unordered_set<int> s = genes[idx].to_Set(); // 每条染色体
 			int fi = mcmf.minCost_Set(s), fj;
 			unordered_set<int> cur; // 邻域
@@ -283,6 +283,7 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99, int
 		next_genes[0] = elite; // 精英
 		for(int idx = 1; idx < geneCnt; ++idx)
 			next_genes[idx] = genes[select(genes)];
+
 
 		for(int idx = 0; idx < geneCnt; ++idx)
 			genes[idx] = next_genes[idx];
@@ -379,9 +380,9 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	// SA(Tabu({}, 20));
 	// SA();
 	// GA();
-	SAGA();
-	// if(mcmf.networkNum < 200) SAGA();
-	// else SA();
+	// SAGA();
+	if(mcmf.networkNum < 200) SAGA();
+	else SA();
 
 
 	//- test
