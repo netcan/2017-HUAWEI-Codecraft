@@ -52,7 +52,8 @@ class Gene {
 			std::vector<int> ss(s.begin(), s.end());
 			sort(ss.begin(), ss.end());
 			size_t j = 0;
-			for(int i = 0; i < len && j < ss.size(); ++i) {
+			size_t ss_size = ss.size();
+			for(int i = 0; i < len && j < ss_size; ++i) {
 				if(ss[j] == i) {
 					code[i] = 1;
 					++j;
