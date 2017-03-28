@@ -47,8 +47,8 @@ int select(const vector<Gene> & genes) {
 	return 0;
 }
 
-void GA(int geneCnt = 50, double retain = 0.6, double crossP = 0.95, double mutationP = 0.15) { // 遗传算法
-	// 初始基因数，精英保留率(1-retain)，交叉率，变异率
+void GA(int geneCnt = 50, double retain = 30, double crossP = 0.95, double mutationP = 0.15) { // 遗传算法
+	// 初始基因数，精英保留(geneCnt-retain)，交叉率，变异率
 	int iterationCnt = 0;
 	int minCost = MCMF::INF;
 
@@ -77,7 +77,7 @@ void GA(int geneCnt = 50, double retain = 0.6, double crossP = 0.95, double muta
 		for(int i = 0; i < geneCnt; ++i) {
 			genes[i].fitness = fitness(genes[i]);
 			sum += genes[i].fitness;
-			minCost = min(minCost, mcmf.networkNum * mcmf.costPerCDN - genes[i].fitness);
+			minCost = min<double>(minCost, mcmf.networkNum * mcmf.costPerCDN - genes[i].fitness);
 			que.push(genes[i]); // 最大堆
 		}
 
@@ -88,7 +88,7 @@ void GA(int geneCnt = 50, double retain = 0.6, double crossP = 0.95, double muta
 
 		// 选择
 		for(int i = 0; i < geneCnt; ++i) {
-			if(que.size() > geneCnt * retain) next_genes[i] = que.top();
+			if(que.size() > retain) next_genes[i] = que.top();
 			else next_genes[i] = genes[select(genes)];
 			que.pop();
 		}
@@ -191,6 +191,119 @@ void SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999) { 
 	printf("minCost: %d/%d cdnNum: %ld\n\n", minCost, mcmf.consumerNum * mcmf.costPerCDN, backup.size());
 }
 
+//- SAGA
+void SAGA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99, int geneCnt = 25, double crossP = 0.95, double mutationP = 0.15) { // 模拟退火，初始温度，迭代系数
+	// double T = 20.0, delta = 0.99999; // 初始温度20, 0.999-0.999999
+
+	unordered_set<int> initial;
+	vector<Gene> genes(geneCnt);
+	vector<Gene> next_genes(geneCnt);
+
+	if(init.empty()) {
+		for(int u=0; u < mcmf.consumerNum; ++u)  // 初始位置，直连
+			initial.insert(mcmf.edges[mcmf.G[u + mcmf.networkNum][0]].to);
+	} else initial = move(init);
+
+	int minCost = MCMF::INF;
+
+	// for(int i = 0; i < geneCnt; ++i)
+		// genes[i].set(initial, mcmf.networkNum);
+	genes[0].set(initial, mcmf.networkNum);
+	for(int i = 1; i < geneCnt; ++i)
+		genes[i].reset(mcmf.networkNum);
+
+
+	int iterationCnt = 0;
+	while(runing && T > 0.1) {
+		next_genes.clear();
+
+		int fmin = MCMF::INF;
+		for(int idx = 0; idx < geneCnt; ++idx) {
+			unordered_set<int> s = genes[idx].to_Set(); // 每条染色体
+			int fi = mcmf.minCost_Set(s), fj;
+			unordered_set<int> cur; // 邻域
+			// 计算领域
+			int u = -1;
+			do {
+				for(auto x: s) {
+					if(Rand.Random_Real(0, 1) <  1.0 / mcmf.networkNum) {
+						u = x;
+						break;
+					}
+				}
+			} while(u == -1);
+
+			int selectEdge = 0, v; // (u, v)随机选点
+
+			do {
+				for(selectEdge = 0; (selectEdge < (int)mcmf.G[u].size() - 1) &&
+						Rand.Random_Real(0, 1) > 1.0 / mcmf.G[u].size(); ++selectEdge);
+			}
+			while( (v = mcmf.edges[mcmf.G[u][selectEdge]].to) >= mcmf.networkNum);
+
+			for(int x: s) {
+				if(x == u) cur.insert(v);
+				else cur.insert(x);
+			}
+			// 邻域计算完毕
+
+			fj = mcmf.minCost_Set(cur);
+
+			if(fj != -1)  {// 有解
+				int dC = fj - fi;
+				// printf("dC: %d\n", dC);
+				if(fi == -1 || min<double>(1, exp(-dC / T)) > Rand.Random_Real(0, 1)) {// 接受
+					genes[idx].set(cur, mcmf.networkNum);
+					genes[idx].fitness = fj;
+				} else
+					genes[idx].fitness = fi;
+				fmin = min(fmin, fj);
+			} else { // 无解，不接受
+				genes[idx].fitness = (fi == -1?mcmf.networkNum * mcmf.costPerCDN:fi);
+			}
+		}
+
+		// 计算适应度
+		double sum = 0.0;
+		for(int idx = 0; idx < geneCnt; ++idx) {
+			int dC = genes[idx].fitness - fmin;
+			genes[idx].fitness = exp(-dC / T);
+			sum += genes[idx].fitness;
+		}
+
+		for(int idx = 0; idx < geneCnt; ++idx)
+			genes[idx].P = genes[idx].fitness / sum;
+
+		// 轮盘赌选择
+		for(int idx = 0; idx < geneCnt; ++idx)
+			next_genes[idx] = genes[select(genes)];
+
+		for(int idx = 0; idx < geneCnt; ++idx)
+			genes[idx] = next_genes[idx];
+
+		// XXOO
+		for(int i = 0; i < geneCnt; i+=2)
+			if(Rand.Random_Real(0, 1) < crossP)
+				genes[i] * genes[i+1];
+
+		// 突变
+		for(int i = 0; i < geneCnt; ++i)
+			if(Rand.Random_Real(0, 1) < mutationP)
+				genes[i].mutation();
+
+		minCost = min(minCost, fmin);
+		T *= delta;
+
+		++iterationCnt;
+		printf("T=%lf iterationCnt=%d minCost = %d\n", T, iterationCnt, minCost);
+	}
+
+	printf("T=%lf iterationCnt=%d\n", T, iterationCnt);
+	// mcmf.showSolution();
+	printf("minCost: %d/%d\n\n", minCost, mcmf.consumerNum * mcmf.costPerCDN);
+}
+
+
 
 unordered_set<int> Tabu(unordered_set<int>init = {}, int times = MCMF::INF) { // 禁忌搜索
 	typedef unordered_set<int> X;
@@ -260,8 +373,10 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	// SA(Tabu({}, 20));
 	// SA();
 	// GA();
-	if(mcmf.networkNum < 200) GA();
+	// SAGA();
+	if(mcmf.networkNum < 200) SAGA();
 	else SA();
+
 
 	//- test
 	/*
