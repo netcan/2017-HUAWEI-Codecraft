@@ -47,7 +47,8 @@ int select(const vector<Gene> & genes) {
 	return 0;
 }
 
-void GA(int geneCnt = 50, double crossP = 0.95, double mutationP = 0.15) { // 遗传算法
+void GA(int geneCnt = 50, double retain = 0.6, double crossP = 0.95, double mutationP = 0.15) { // 遗传算法
+	// 初始基因数，精英保留率(1-retain)，交叉率，变异率
 	int iterationCnt = 0;
 	int minCost = MCMF::INF;
 
@@ -87,10 +88,11 @@ void GA(int geneCnt = 50, double crossP = 0.95, double mutationP = 0.15) { // �
 
 		// 选择
 		for(int i = 0; i < geneCnt; ++i) {
-			if(que.size() > geneCnt * 0.6) next_genes[i] = que.top();
+			if(que.size() > geneCnt * retain) next_genes[i] = que.top();
 			else next_genes[i] = genes[select(genes)];
 			que.pop();
 		}
+
 
 		for(int i = 0; i < geneCnt; ++i) // 复制
 			genes[i] = next_genes[i];
@@ -176,6 +178,8 @@ void SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999) { 
 			minCost = min(minCost, backCost);
 	 	}
 		T *= delta;
+
+		// printf("T=%lf iterationCnt=%d minCost = %d\n", T, iterationCnt, minCost);
 	}
 
 	printf("T=%lf iterationCnt=%d\n", T, iterationCnt);
