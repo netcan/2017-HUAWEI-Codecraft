@@ -194,7 +194,7 @@ void SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999, do
 }
 
 //- SAGA
-void SAGA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99, int geneCnt = 25, double crossP = 0.95, double mutationP = 0.15) { // 模拟退火，初始温度，迭代系数
+void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.02, double delta = 0.99, int geneCnt = 25, double crossP = 0.95, double mutationP = 0.15) { // 模拟退火，初始温度，迭代系数
 	// double T = 20.0, delta = 0.99999; // 初始温度20, 0.999-0.999999
 
 	unordered_set<int> initial;
@@ -226,28 +226,29 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99, int
 			int fi = mcmf.minCost_Set(s), fj;
 			unordered_set<int> cur; // 邻域
 			// 计算领域
+
+			//- 随机选点u
 			int u = -1;
-			do {
-				for(auto x: s) {
-					if(Rand.Random_Real(0, 1) <  1.0 / mcmf.networkNum) {
-						u = x;
-						break;
-					}
-				}
-			} while(u == -1);
+			int i = Rand.Random_Int(0, s.size() - 1);
+			auto it = s.begin();
+			for(; it != s.end() && i; ++it, --i);
+			u = *it;
+			// - 选完了
 
-			int selectEdge = 0, v; // (u, v)随机选点
-
+			// 随机选u->v
+			int v = -1;
 			do {
-				for(selectEdge = 0; (selectEdge < (int)mcmf.G[u].size() - 1) &&
-						Rand.Random_Real(0, 1) > 1.0 / mcmf.G[u].size(); ++selectEdge);
-			}
-			while( (v = mcmf.edges[mcmf.G[u][selectEdge]].to) >= mcmf.networkNum);
+				v = mcmf.edges[mcmf.G[u][Rand.Random_Int(0, mcmf.G[u].size() - 1)]].to; // (u, v)随机选点
+			} while(v >= mcmf.networkNum); // 防止移动到消费节点
+			// - 选完v了
 
 			for(int x: s) {
 				if(x == u) cur.insert(v);
 				else cur.insert(x);
 			}
+
+			if(Rand.Random_Real(0, 1) < poi)
+				cur.insert(Rand.Random_Int(0, mcmf.networkNum - 1)); // 增加一个点
 			// 邻域计算完毕
 
 			fj = mcmf.minCost_Set(cur);
