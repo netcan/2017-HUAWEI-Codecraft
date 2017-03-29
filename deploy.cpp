@@ -385,7 +385,7 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	// SA();
 	// GA();
 	// SAGA();
-	if(mcmf.networkNum < 200) SAGA();
+	if(mcmf.networkNum < 500) SAGA();
 	else SA();
 
 	// unordered_set<int> cdn{0, 3, 22};

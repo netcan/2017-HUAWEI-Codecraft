@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <deque>
 #include <vector>
 #include <unordered_set>
 #include "deploy.h"
@@ -85,11 +86,12 @@ class MCMF{
 				while (BellmanFord(superSource, superSink, flow, cost));
 			} else { // zkw算法
 				int tmpCost = 0;
-				do {
-					do {
+				do
+					do
 						bzero(vis, sizeof(vis));
-					} while(aug(superSource, INF, tmpCost, cost));
-				} while(modLabel(tmpCost));
+					while(aug(superSource, INF, tmpCost, cost));
+				while(modLabel(tmpCost));
+
 				for (size_t i = 0; i < G[superSource].size(); i++)
 					flow += edges[G[superSource][i]].flow;
 			}
