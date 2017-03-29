@@ -70,15 +70,20 @@ class MCMF{
 
 		int findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow);
 		void getPath(int cost);
-		inline int minCost() { // 调用setCDN后再调用minCost!! 注意不能连续调用多次minCost!!!
-			int flow = 0, cost = 0;
-			while (BellmanFord(superSource, superSink, flow, cost));
-			cost += G[superSource].size() * costPerCDN;
 
-			if(flow < needFlow) return -1;
-			else if(cost < solutionPath.first) getPath(cost); // 更新方案
+		inline int minCost(int method = 0) { // 调用setCDN后再调用minCost!! 注意不能连续调用多次minCost!!!
+			if(method == 0) { // BellmanFord算法
+				int flow = 0, cost = 0;
+				while (BellmanFord(superSource, superSink, flow, cost));
+				cost += G[superSource].size() * costPerCDN;
 
-			return cost;
+				if(flow < needFlow) return -1;
+				else if(cost < solutionPath.first) getPath(cost); // 更新方案
+
+				return cost;
+			} else { // zkw算法
+
+			}
 		}
 
 		inline void setCdn(const unordered_set<int> & cdn) {

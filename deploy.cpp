@@ -1,6 +1,7 @@
 #include "deploy.h"
 #include <stdio.h>
 #include "random.h"
+#include "mcmf.h"
 #include "gene.h"
 
 typedef void (sigFunc)(int);

@@ -2,7 +2,6 @@
 #define __ROUTE_H__
 
 #include "lib_io.h"
-#include "spfa.h"
 #include <signal.h>
 #include <unistd.h>
 #include <list>
