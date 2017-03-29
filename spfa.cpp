@@ -34,7 +34,8 @@ int MCMF::findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow) { /
 	if(u != superSource) tmpPath.push_back(u);
 
 	int tf = totalFlow;
-	for(size_t i = 0; i < G[u].size(); ++i) {
+	size_t Gu_size = G[u].size();
+	for(size_t i = 0; i < Gu_size; ++i) {
 		Edge &e = edges[G[u][i]];
 		// printf("%d->%d flow: %d\n", e.from, e.to, e.flow);
 		if(e.flow > 0) { // 流过的流量>0
@@ -68,8 +69,8 @@ bool MCMF::BellmanFord(int s, int t, int &flow, int &cost) {
 	while (!queue.empty()) {
 		int u = queue.front(); queue.pop();
 		vis[u] = 0;
-
-		for (size_t i = 0; i < G[u].size(); i++) {
+		size_t Gu_size = G[u].size();
+		for (size_t i = 0; i < Gu_size; i++) {
 			const Edge &e = edges[G[u][i]];
 			if (e.cap > e.flow && d[e.to] > d[u] + e.cost) {
 				d[e.to] = d[u] + e.cost;
