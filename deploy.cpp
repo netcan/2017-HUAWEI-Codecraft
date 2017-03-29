@@ -120,7 +120,7 @@ void GA(int geneCnt = 50, double retain = 30, double crossP = 0.95, double mutat
 
 //- GA end
 
-void SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999) { // 模拟退火，初始温度，迭代系数
+void SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999, double poi = 0.02) { // 模拟退火，初始温度，迭代系数，0.15的增点概率
 	// double T = 20.0, delta = 0.99999; // 初始温度20, 0.999-0.999999
 
 	unordered_set<int> backup, cur;
@@ -135,29 +135,31 @@ void SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999) { 
 	minCost = min(minCost, backCost);
 
 
-	int iterationCnt = 0;
+	int iterationCnt = 0, poiCnt = 0;
 	while(runing && T > 0.1) {
+		//- 随机选点u
 		int u = -1;
-		do {
-			for(auto x: backup) {
-				if(Rand.Random_Real(0, 1) <  1.0 / mcmf.networkNum) {
-					u = x;
-					break;
-				}
-			}
-		} while(u == -1);
+		int i = Rand.Random_Int(0, backup.size() - 1);
+		auto it = backup.begin();
+		for(; it != backup.end() && i; ++it, --i);
+		u = *it;
+		// - 选完了
 
-		int selectEdge = 0, v; // (u, v)随机选点
-
+		// 随机选u->v
+		int v = -1;
 		do {
-			for(selectEdge = 0; (selectEdge < (int)mcmf.G[u].size() - 1) &&
-					Rand.Random_Real(0, 1) > 1.0 / mcmf.G[u].size(); ++selectEdge);
-		}
-		while( (v = mcmf.edges[mcmf.G[u][selectEdge]].to) >= mcmf.networkNum);
+			v = mcmf.edges[mcmf.G[u][Rand.Random_Int(0, mcmf.G[u].size() - 1)]].to; // (u, v)随机选点
+		} while(v >= mcmf.networkNum); // 防止移动到消费节点
+		// - 选完v了
 
 		for(int x: backup) {
 			if(x == u) cur.insert(v);
 			else cur.insert(x);
+		}
+
+		if(Rand.Random_Real(0, 1) < poi) {
+			// ++poiCnt;
+			cur.insert(Rand.Random_Int(0, mcmf.networkNum - 1)); // 增加一个点
 		}
 
 		curCost = mcmf.minCost_Set(cur);
@@ -169,7 +171,7 @@ void SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999) { 
 		else {
 			int dC = curCost - backCost;
 			// printf("dC: %d\n", dC);
-			if(dC < 0 || exp(-dC / T) > Rand.Random_Real(0, 1))  {// 接受
+			if(min(1.0, exp(-dC / T)) > Rand.Random_Real(0, 1))  {// 接受
 				backup = move(cur);
 				backCost = curCost;
 			} else {
@@ -182,7 +184,7 @@ void SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999) { 
 		// printf("T=%lf iterationCnt=%d minCost = %d\n", T, iterationCnt, minCost);
 	}
 
-	printf("T=%lf iterationCnt=%d\n", T, iterationCnt);
+	printf("T=%lf iterationCnt=%d poiCnt=%d\n", T, iterationCnt, poiCnt);
 	// printf("Deploy CDN(%ld):\n", backup.size());
 	// for(int x: backup)
 		// printf("%d ", x);
