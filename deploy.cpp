@@ -195,7 +195,7 @@ void SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999, do
 }
 
 //- SAGA
-void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.02, double delta = 0.99, int geneCnt = 25, double crossP = 0.95, double mutationP = 0.15) { // 模拟退火，初始温度，迭代系数
+void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.05, double delta = 0.999, int geneCnt = 25, double crossP = 0.95, double mutationP = 0.15) { // 模拟退火，初始温度，迭代系数
 	// double T = 20.0, delta = 0.99999; // 初始温度20, 0.999-0.999999
 
 	unordered_set<int> initial;
