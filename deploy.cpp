@@ -24,7 +24,7 @@ void timeOutHandler(int signo) {
 	return;
 }
 
-//- GA begin，该算法已被SAGA替代！！！
+//- GA begin，该算法已被SAGA替代！！！因为fitness从int改为double类型。
 int fitness(const Gene &p) { // 适应性
 	int cost = mcmf.minCost_Set(p.to_Set());
 	// printf("cost = %d\n", cost);
@@ -385,8 +385,11 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	// SA();
 	// GA();
 	// SAGA();
-	if(mcmf.networkNum < 500) SAGA();
-	else SA();
+	if(mcmf.networkNum < 200)
+		SAGA({}, 20, 0.01, 0.99, 30, 0.95, 0.15);
+	else if(mcmf.networkNum < 500)
+		SAGA();
+	else SA({}, 20, 0.99999, 0.08);
 
 	// unordered_set<int> cdn{0, 3, 22};
 	// printf("cost = %d\n", mcmf.minCost_Set(cdn));
