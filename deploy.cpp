@@ -388,6 +388,9 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	if(mcmf.networkNum < 200) SAGA();
 	else SA();
 
+	// unordered_set<int> cdn{0, 3, 22};
+	// printf("cost = %d\n", mcmf.minCost_Set(cdn));
+
 
 	//- test
 	/*

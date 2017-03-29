@@ -23,9 +23,9 @@ using namespace std;
 class MCMF{
 	private:
 		struct Edge{
-			int from, to, cap, flow ,cost;
+			int from, to, cap, flow ,cost, oldCost;
 			Edge() {}
-			Edge(int from, int to, int cap, int flow, int cost):from(from), to(to), cap(cap), flow(flow), cost(cost) {}
+			Edge(int from, int to, int cap, int flow, int cost):from(from), to(to), cap(cap), flow(flow), cost(cost), oldCost(cost) {}
 		};
 		static const int N = 1600+5;
 		static char topo[50000*1000*6];
@@ -56,34 +56,48 @@ class MCMF{
 		int superSource, superSink; // 总节点数，超级源点/汇点，需要的流量
 		int d[N], f[N], p[N]; // 最小费用，当前流量，父节点（增广路径），中间变量
 		bool vis[N]; // 标记指针
+		bool mcmfMethod = 1; // 0为BellmanFord最小费用流，1为ZKW最小费用流算法
 		pair<int, vector<vector<int>>> solutionPath; // 当前最优费用，路径
 
 		bool BellmanFord(int s, int t, int &flow, int &cost);
+		// ZKW算法
+		int aug(int u, int minFlow, int &tmpCost, int &cost);
+		bool modLabel(int &tmpCost);
 
 		inline void reset() { // 还原初始状态，删除源点
 			for(size_t i = 0; i < G[superSource].size(); ++i)
 				G[edges[G[superSource][i]].to].pop_back(); // 删除链接超源的边
 			for(int i=G[superSource].size() * 2; i > 0; --i) edges.pop_back(); // 删除超源的边
-			for(size_t i = 0; i < edges.size(); ++i) edges[i].flow = 0; // 重置流量
+			for(size_t i = 0; i < edges.size(); ++i) {
+				if(mcmfMethod) edges[i].cost = edges[i].oldCost;
+				edges[i].flow = 0; // 重置流量
+			}
 			G[superSource].clear();
 		}
 
 		int findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow);
 		void getPath(int cost);
 
-		inline int minCost(int method = 0) { // 调用setCDN后再调用minCost!! 注意不能连续调用多次minCost!!!
-			if(method == 0) { // BellmanFord算法
-				int flow = 0, cost = 0;
+		inline int minCost() { // 调用setCDN后再调用minCost!! 注意不能连续调用多次minCost!!!
+			int cost = 0, flow = 0;
+
+			if(mcmfMethod == 0) { // BellmanFord算法
 				while (BellmanFord(superSource, superSink, flow, cost));
-				cost += G[superSource].size() * costPerCDN;
-
-				if(flow < needFlow) return -1;
-				else if(cost < solutionPath.first) getPath(cost); // 更新方案
-
-				return cost;
 			} else { // zkw算法
-
+				int tmpCost = 0;
+				do {
+					do {
+						bzero(vis, sizeof(vis));
+					} while(aug(superSource, INF, tmpCost, cost));
+				} while(modLabel(tmpCost));
+				for (size_t i = 0; i < G[superSource].size(); i++)
+					flow += edges[G[superSource][i]].flow;
 			}
+
+			if(flow < needFlow) return -1;
+			cost += G[superSource].size() * costPerCDN;
+			if(cost < solutionPath.first) getPath(cost); // 更新方案
+			return cost;
 		}
 
 		inline void setCdn(const unordered_set<int> & cdn) {
@@ -105,7 +119,6 @@ class MCMF{
 			consumerNum(consumerNum), costPerCDN(costPerCDN), needFlow(needFlow) {}
 		void AddEdge(int from, int to, int cap, int cost);
 		void showSolution() const;
-		void loadGraph();
 		void loadGraph(char * topo[MAX_EDGE_NUM], int line_num);
 		const char* outputPath();
 
