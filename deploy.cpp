@@ -121,7 +121,7 @@ void GA(int geneCnt = 20, double retain = 12, double crossP = 0.95, double mutat
 
 //- GA end
 
-void SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999, double poi = 0.02) { // 模拟退火，初始温度，迭代系数，0.15的增点概率
+int SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999, double poi = 0.02) { // 模拟退火，初始温度，迭代系数，0.15的增点概率
 	// double T = 20.0, delta = 0.99999; // 初始温度20, 0.999-0.999999
 
 	unordered_set<int> backup, cur;
@@ -159,7 +159,7 @@ void SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999, do
 		}
 
 		if(Rand.Random_Real(0, 1) < poi) {
-			// ++poiCnt;
+			++poiCnt;
 			cur.insert(Rand.Random_Int(0, mcmf.networkNum - 1)); // 增加一个点
 		}
 
@@ -192,6 +192,7 @@ void SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999, do
 	// puts("\n=====Solution======");
 	// mcmf.showSolution();
 	printf("minCost: %d/%d cdnNum: %ld\n\n", minCost, mcmf.consumerNum * mcmf.costPerCDN, backup.size());
+	return minCost;
 }
 
 //- SAGA
@@ -398,19 +399,21 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 
 	//- test
 	/*
-	double T = 1.0, delta = 0.99999, poi = 0.02;
-	double bestT = T, bestDelta = delta;
+	double T = 20.0, delta = 0.99999, poi = 0.02;
+	double bestT = T, bestDelta = delta, bestPoi = poi;
 	int minCost = MCMF::INF;
 	int cost = 0;
-	for(; T <= 100.0; T+=1) {
+	// for(; T <= 100.0; T+=1) {
+	for(poi = 0.01; poi <= 1; poi += 0.01) {
 		alarm(88);
-		if( (cost = SA({}, T,delta, poi)) < minCost) {
+		if( (cost = SA({}, T,delta, poi)) < minCost && cost != -1) {
 			minCost = cost;
 			bestT = T;
 			bestDelta = delta;
+			bestPoi = poi;
 		}
 		puts("--------------------");
-		printf("bestT = %lf/%lf bestDelta = %lf poi = %lf minCost = %d\n", bestT, T, bestDelta, poi, minCost);
+		printf("bestT = %lf/%lf bestDelta = %lf/%lf bestPoi = %lf/%lf minCost = %d\n", bestT, T, bestDelta, delta, bestPoi, poi, minCost);
 		puts("--------------------");
 		runing = true;
 	}
