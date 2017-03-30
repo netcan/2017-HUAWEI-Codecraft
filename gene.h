@@ -22,7 +22,7 @@ class Gene {
 		int len; // 长度，0-1200
 		bitset<1024> code;
 	public:
-		int fitness; // 适应度
+		double fitness; // 适应度
 		double P; // 选中概率
 		Gene(): len(0), code(), fitness(0), P(0) {}
 		Gene(int len): len(len) {

@@ -6,7 +6,7 @@
   > Created Time: 2017-03-21 Tue 21:25:20 CST
  ************************************************************************/
 
-#include "spfa.h"
+#include "mcmf.h"
 
 char MCMF::topo[50000*1000*6];
 
@@ -98,6 +98,52 @@ bool MCMF::BellmanFord(int s, int t, int &flow, int &cost) {
 	return true;
 }
 
+int MCMF::aug(int u, int minFlow, int &tmpCost, int &cost) {
+	if(u == superSink) { // 到达终点
+		cost += tmpCost * minFlow;
+		return minFlow;
+	}
+	vis[u] = true;
+	int tf = minFlow;
+	for(size_t i = 0; i < G[u].size(); ++i) {
+		Edge &e = edges[G[u][i]];
+
+		if( (e.cap - e.flow) && !e.cost && !vis[e.to]) {
+			int d = aug(e.to, min(tf, (e.cap - e.flow)), tmpCost, cost);
+			e.flow += d;
+			edges[G[u][i] ^ 1].flow -= d;
+			tf -= d;
+			if(! tf) return minFlow;
+		}
+	}
+	return minFlow - tf;
+}
+
+bool MCMF::modLabel(int &tmpCost) {
+	int d = INF;
+	for(int u=0; u<=superSink; ++u)
+		if(vis[u]) {
+			for(size_t i = 0; i < G[u].size(); ++i) {
+				Edge &e = edges[G[u][i]];
+				if( (e.cap - e.flow) && !vis[e.to] && e.cost < d)
+					d = e.cost;
+			}
+		}
+	if(d == INF) return false;
+
+	for(int u=0; u<=superSink; ++u)
+		if(vis[u]) {
+			for(size_t i = 0; i < G[u].size(); ++i) {
+				edges[G[u][i]].cost -= d;
+				edges[G[u][i] ^ 1].cost += d;
+			}
+		}
+	tmpCost += d;
+	return true;
+}
+
+
+
 void MCMF::AddEdge(int from, int to, int cap, int cost) {
 	edges.push_back(Edge(from, to, cap, 0, cost));
 	edges.push_back(Edge(to, from, 0, 0, -cost));
@@ -122,38 +168,6 @@ void MCMF::showSolution() const{
 		printf(" flow: %d\n", x.back());
 	}
 	printf("Flow :%d/%d Cost: %d/%d\n", totalFlow, needFlow, solutionPath.first, costPerCDN * consumerNum);
-}
-
-void MCMF::loadGraph() {
-	scanf("%d%d%d", &networkNum, &edgeNum, &consumerNum);
-	scanf("%d", &costPerCDN);
-
-	solutionPath.first = consumerNum * costPerCDN;
-
-	printf("networkNode: %d edgeNum: %d cosumerNode: %d\n",
-			networkNum, edgeNum, consumerNum);
-	printf("costPerCDN: %d\n", costPerCDN);
-
-	superSource = consumerNum + networkNum; // 超级源点、汇点
-	superSink = consumerNum + networkNum + 1;
-
-	int from, to, bandwidth, cpb;
-
-	for(int i=0; i < edgeNum; ++i) {
-		scanf("%d%d%d%d", &from, &to, &bandwidth, &cpb);
-		AddEdge(from, to, bandwidth, cpb);
-		AddEdge(to, from, bandwidth, cpb);
-	}
-
-	for(int i=0; i < consumerNum; ++i) {
-		scanf("%d%d%d", &from, &to, &bandwidth);
-		AddEdge(to, from + networkNum, bandwidth, 0);
-		AddEdge(from + networkNum, superSink, bandwidth, 0);
-
-		vector<int> path{to, from, bandwidth}; // 直连策略
-		solutionPath.second.push_back(move(path));
-	}
-
 }
 
 void MCMF::loadGraph(char * topo[MAX_EDGE_NUM], int line_num) {
