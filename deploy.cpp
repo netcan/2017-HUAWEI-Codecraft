@@ -24,7 +24,7 @@ void timeOutHandler(int signo) {
 	return;
 }
 
-//- GA begin，该算法已被SAGA替代！！！因为fitness从int改为double类型。
+//- GA begin
 int fitness(const Gene &p) { // 适应性
 	int cost = mcmf.minCost_Set(p.to_Set());
 	// printf("cost = %d\n", cost);
@@ -48,7 +48,7 @@ int select(const vector<Gene> & genes) {
 	return 0;
 }
 
-void GA(int geneCnt = 50, double retain = 30, double crossP = 0.95, double mutationP = 0.15) { // 遗传算法
+void GA(int geneCnt = 20, double retain = 12, double crossP = 0.95, double mutationP = 0.15) { // 遗传算法
 	// 初始基因数，精英保留(geneCnt-retain)，交叉率，变异率
 	int iterationCnt = 0;
 	int minCost = MCMF::INF;
@@ -66,7 +66,7 @@ void GA(int geneCnt = 50, double retain = 30, double crossP = 0.95, double mutat
 		genes[i].reset(mcmf.networkNum);
 
 
-	while(runing && iterationCnt < 300) {
+	while(runing && iterationCnt < 800) {
 
 		// for(int i = 0; i < geneCnt; ++i) {
 			// printf("基因型%d: ", i);
@@ -195,7 +195,7 @@ void SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999, do
 }
 
 //- SAGA
-void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.05, double delta = 0.999, int geneCnt = 25, double crossP = 0.95, double mutationP = 0.15) { // 模拟退火，初始温度，迭代系数
+void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.05, double delta = 0.999, int geneCnt = 26, double crossP = 0.95, double mutationP = 0.15) { // 模拟退火，初始温度，迭代系数
 	// double T = 20.0, delta = 0.99999; // 初始温度20, 0.999-0.999999
 
 	unordered_set<int> initial;
@@ -382,9 +382,10 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	alarm(88);
 	mcmf.loadGraph(topo, line_num);
 	// SA(Tabu({}, 20));
-	// SA();
+	// SA({}, 20, 0.99999, 0.02);
 	// GA();
 	// SAGA();
+
 	if(mcmf.networkNum < 200)
 		SAGA({}, 20, 0.01, 0.99, 30, 0.95, 0.15);
 	else if(mcmf.networkNum < 500)
@@ -397,18 +398,20 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 
 	//- test
 	/*
-	double T = 1.0, delta = 0.99999;
+	double T = 1.0, delta = 0.99999, poi = 0.02;
 	double bestT = T, bestDelta = delta;
 	int minCost = MCMF::INF;
 	int cost = 0;
 	for(; T <= 100.0; T+=1) {
 		alarm(88);
-		if( (cost = SA(T,delta)) < minCost) {
+		if( (cost = SA({}, T,delta, poi)) < minCost) {
 			minCost = cost;
 			bestT = T;
 			bestDelta = delta;
 		}
-		printf("bestT = %lf bestDelta = %lf minCost = %d\n", bestT, bestDelta, minCost);
+		puts("--------------------");
+		printf("bestT = %lf/%lf bestDelta = %lf poi = %lf minCost = %d\n", bestT, T, bestDelta, poi, minCost);
+		puts("--------------------");
 		runing = true;
 	}
 	*/
