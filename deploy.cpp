@@ -387,12 +387,12 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	// GA();
 	// SAGA();
 
+	// 初始解{}，初始温度，增点概率，迭代系数，基因数，交叉率，变异率
 	if(mcmf.networkNum < 200)
 		SAGA({}, 20, 0.01, 0.99, 30, 0.95, 0.15);
 	else if(mcmf.networkNum < 500)
-		SAGA();
+		SAGA({}, 20, 0.01, 0.999, 26, 0.95, 0.15);
 	else
-		// SA({}, 20, 0.99999, 0.00);
 		SAGA({}, 20, 0.01, 0.999, 6, 0.95, 0.15);
 
 	// unordered_set<int> cdn{0, 3, 22};
