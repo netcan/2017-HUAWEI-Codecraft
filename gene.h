@@ -57,7 +57,8 @@ class Gene {
 				if(ss[j] == i) {
 					code[i] = 1;
 					++j;
-				}
+				} else // 忘记置0了
+					code[i] = 0;
 			}
 		}
 
