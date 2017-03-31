@@ -24,6 +24,16 @@ void timeOutHandler(int signo) {
 	return;
 }
 
+// 直连状态
+unordered_set<int> directConn() {
+	static unordered_set<int> direct;
+	if(direct.empty()) {
+		for(int u=0; u < mcmf.consumerNum; ++u)  // 初始位置，直连
+			direct.insert(mcmf.edges[mcmf.G[u + mcmf.networkNum][0]].to);
+	}
+	return direct;
+}
+
 //- GA begin
 int fitness(const Gene &p) { // 适应性
 	int cost = mcmf.minCost_Set(p.to_Set());
@@ -56,11 +66,9 @@ void GA(int geneCnt = 20, double retain = 12, double crossP = 0.95, double mutat
 	vector<Gene> genes(geneCnt);
 	vector<Gene> next_genes(geneCnt);
 	priority_queue<Gene> que; // 最大堆选出最强的那20条染色体
-	unordered_set<int> inital;
+	unordered_set<int> initial = directConn();
 	// 初始化基因
-	for(int u=0; u < mcmf.consumerNum; ++u)  // 初始位置
-		inital.insert(mcmf.edges[mcmf.G[u + mcmf.networkNum][0]].to);
-	genes[0].set(inital, mcmf.networkNum);
+	genes[0].set(initial, mcmf.networkNum);
 
 	for(int i = 1; i < geneCnt; ++i)
 		genes[i].reset(mcmf.networkNum);
@@ -121,15 +129,14 @@ void GA(int geneCnt = 20, double retain = 12, double crossP = 0.95, double mutat
 
 //- GA end
 
+//- 模拟退火 begin
 int SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999, double poi = 0.02) { // 模拟退火，初始温度，迭代系数，0.15的增点概率
 	// double T = 20.0, delta = 0.99999; // 初始温度20, 0.999-0.999999
 
 	unordered_set<int> backup, cur;
 
-	if(init.empty()) {
-		for(int u=0; u < mcmf.consumerNum; ++u)  // 初始位置
-			backup.insert(mcmf.edges[mcmf.G[u + mcmf.networkNum][0]].to);
-	} else backup = move(init);
+	if(init.empty()) init = directConn();
+	else backup = move(init);
 
 	int minCost = MCMF::INF, backCost = MCMF::INF, curCost = MCMF::INF;
 	backCost = mcmf.minCost_Set(backup);
@@ -194,8 +201,9 @@ int SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999, dou
 	printf("minCost: %d/%d cdnNum: %ld\n\n", minCost, mcmf.consumerNum * mcmf.costPerCDN, backup.size());
 	return minCost;
 }
+//- 模拟退火 end
 
-//- SAGA
+//- SAGA begin
 void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.05, double delta = 0.999, int geneCnt = 26, double crossP = 0.95, double mutationP = 0.15) { // 模拟退火，初始温度，迭代系数
 	// double T = 20.0, delta = 0.99999; // 初始温度20, 0.999-0.999999
 
@@ -203,10 +211,8 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.05, doubl
 	vector<Gene> genes(geneCnt);
 	vector<Gene> next_genes(geneCnt);
 
-	if(init.empty()) {
-		for(int u=0; u < mcmf.consumerNum; ++u)  // 初始位置，直连
-			initial.insert(mcmf.edges[mcmf.G[u + mcmf.networkNum][0]].to);
-	} else initial = move(init);
+	if(init.empty()) initial = directConn();
+	else initial = move(init);
 
 	int minCost = MCMF::INF;
 
@@ -314,19 +320,18 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.05, doubl
 	// mcmf.showSolution();
 	printf("minCost: %d/%d\n\n", minCost, mcmf.consumerNum * mcmf.costPerCDN);
 }
+//- SAGA end
 
-
-
+//- 禁忌搜索 begin
+// 这块没写好，效果太差
 unordered_set<int> Tabu(unordered_set<int>init = {}, int times = MCMF::INF) { // 禁忌搜索
 	typedef unordered_set<int> X;
 	list<int> H; // 禁忌表，队列
 
 	pair<int, X> x_best;
 	X x_now;
-	if(init.empty()) {
-		for(int u=0; u < mcmf.consumerNum; ++u)  // 初始位置
-			x_now.insert(mcmf.edges[mcmf.G[u + mcmf.networkNum][0]].to);
-	} else x_now = move(init);
+	if(init.empty()) init = directConn();
+	else x_now = move(init);
 
 	pair<int, X> x_next{MCMF::INF, {}}; // 转移
 	H.push_back(x_best.first = mcmf.minCost_Set(x_now));
@@ -374,6 +379,81 @@ unordered_set<int> Tabu(unordered_set<int>init = {}, int times = MCMF::INF) { //
 	printf("minCost: %d/%d cdnNum: %ld\n\n", x_best.first, mcmf.consumerNum * mcmf.costPerCDN, x_best.second.size());
 	return x_best.second;
 }
+//- 禁忌搜索 end
+
+//- BPSO begin
+// 这个BPSO有坑，效果没想象中的好
+double sig(double v, double Vmax, double Vmin) { // v->[0, 1]
+	return 1/(1+ pow((Vmax - v)/(v- Vmin), 2));
+}
+
+void BPSO(unordered_set<int> init = {}, int particleCnt = 10, double Vmin = 0.0, double Vmax = 10.0, double c1 = 1.0, double c2 = 1.0) {
+	vector<Particle> particles(particleCnt);
+	Particle pBest, gBest;
+	int fpBest = -1, fgBest = -1, fCur; // 当代最小费用，全局最小费用
+	vector<double> v[particleCnt]; // Vij
+	unordered_set<int> initial;
+
+	if(init.empty()) initial = directConn(); // 初始状态
+	else initial = move(init);
+
+	for(int i = 0; i < particleCnt; ++i) {
+		if(i) particles[i].reset(mcmf.networkNum);
+		else particles[i].set(initial, mcmf.networkNum); // 直连状态
+
+		for(int j = 0; j < mcmf.networkNum; ++j) // 初始化速度
+			v[i].push_back(Vmin + (Vmax - Vmin) * Rand.Random_Real(0, 1));
+	}
+
+	// for(int i = 0; i < particleCnt; ++i)
+		// for(int j = 0; j < mcmf.networkNum; ++j)
+			// printf("%lf\n", v[i][j]);
+
+
+	int iterationCnt = 0;
+	while(runing) {
+		for(int i = 0; i < particleCnt; ++i) {
+			if( (fCur = mcmf.minCost_Set(particles[i].to_Set())) != -1) {
+				if(fpBest == -1 || fpBest > fCur) {
+					fpBest = fCur;
+					pBest = particles[i];
+				}
+				if(fgBest == -1 || fgBest > fpBest) {
+					fgBest = fpBest;
+					gBest = pBest;
+				}
+			}
+		}
+
+		for(int i = 0; i < particleCnt; ++i) {
+			// puts("------------------------");
+			// printf("p[%d]: \n", i);
+			// particles[i].show();
+			for(int j = 0; j < mcmf.networkNum; ++j) {
+				v[i][j] = v[i][j] +
+					c1 * Rand.Random_Real(0, 1) * (pBest.getBit(j) - particles[i].getBit(j)) +
+					c2 * Rand.Random_Real(0, 1) * (gBest.getBit(j) - particles[i].getBit(j));
+				if(v[i][j] > Vmax) v[i][j] = Vmax;
+				else if(v[i][j] < Vmin) v[i][j] = Vmin;
+				// printf("sig(%lf) = %lf\n", v[i][j], sig(v[i][j], Vmax, Vmin));
+
+				if(Rand.Random_Real(0, 1) < sig(v[i][j], Vmax, Vmin)) particles[i].setBit(j, 1);
+				else particles[i].setBit(j, 0);
+			}
+			// particles[i].show();
+		}
+
+		fpBest = -1;
+		++iterationCnt;
+		// printf("iterationCnt = %d\n", iterationCnt);
+		// printf("minCost: %d/%d\n", fgBest, mcmf.consumerNum * mcmf.costPerCDN);
+		// break;
+	}
+
+	printf("iterationCnt = %d\n", iterationCnt);
+	printf("minCost: %d/%d\n", fgBest, mcmf.consumerNum * mcmf.costPerCDN);
+}
+//- BPSO end
 
 
 void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
@@ -386,6 +466,7 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	// SA({}, 20, 0.99999, 0.02);
 	// GA();
 	// SAGA();
+	// BPSO();
 
 	// 初始解{}，初始温度，增点概率，迭代系数，基因数，交叉率，变异率
 	if(mcmf.networkNum < 200)
