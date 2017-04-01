@@ -225,7 +225,7 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.05, doubl
 
 	int iterationCnt = 0;
 	Gene elite; // 精英基因
-	while(T > 0.1) {
+	while(runing && T > 0.1) {
 		next_genes.clear();
 
 		int fmin = MCMF::INF;
@@ -313,7 +313,6 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.05, doubl
 		T *= delta;
 
 		++iterationCnt;
-		// printf("T=%lf iterationCnt=%d minCost = %d\n", T, iterationCnt, minCost);
 	}
 
 	printf("T=%lf iterationCnt=%d\n", T, iterationCnt);
