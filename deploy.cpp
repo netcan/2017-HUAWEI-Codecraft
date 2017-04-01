@@ -522,7 +522,7 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	if(mcmf.networkNum < 200)
 		SAGA(XJBS(), 20, 0.01, 0.99, 30, 0.95, 0.15);
 	else if(mcmf.networkNum < 500)
-		SAGA({}, 20, 0.01, 0.999, 26, 0.95, 0.15);
+		SAGA(XJBS(), 20, 0.01, 0.999, 26, 0.95, 0.15);
 	else
 		SAGA(XJBS(), 20, 0.01, 0.999, 6, 0.95, 0.15);
 
