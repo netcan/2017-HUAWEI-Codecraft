@@ -33,6 +33,55 @@ unordered_set<int> directConn() {
 	}
 	return direct;
 }
+// XJBS
+unordered_set<int> XJBS() {
+	unordered_set<int> init = directConn();
+	list<int> cdn(init.begin(), init.end());
+	int minCost = mcmf.minCost_Set(unordered_set<int>(cdn.begin(), cdn.end()));
+
+	// 删点
+	for(auto itr = cdn.begin(); itr != cdn.end(); ) {
+		int node = *itr;
+		int cost = -1;
+		itr = cdn.erase(itr);
+		if( (cost = mcmf.minCost_Set(unordered_set<int>(cdn.begin(), cdn.end()))) < minCost && cost != -1) {
+			minCost = cost;
+			// printf("deleted: %d\n", node);
+		}
+		else {
+			itr = cdn.insert(itr, node); // 恢复
+			++itr;
+		}
+		// printf("minCost: %d/%d\n", minCost, mcmf.consumerNum * mcmf.costPerCDN);
+	}
+	/*
+	// 替换
+	for(auto itr = cdn.begin(); itr != cdn.end(); ++itr) {
+		int u = *itr;
+		for(size_t i = 0; i < mcmf.G[u].size(); ++i) {
+			int cost = -1;
+			int v = mcmf.edges[mcmf.G[u][i]].to;
+			if(v < mcmf.networkNum) {
+				*itr = v; // 替换
+				if( (cost = mcmf.minCost_Set(unordered_set<int>(cdn.begin(), cdn.end()))) < minCost && cost != -1) {
+					minCost = cost;
+					printf("replace %d with %d\n", u, v);
+				}
+				else {
+					*itr = u;
+				}
+			}
+
+			size_t next = mcmf.G[u][i] + 1;
+			if( next < mcmf.G[u].size() && mcmf.edges[next].to == v) ++i;
+		}
+		// printf("minCost: %d/%d\n", minCost, mcmf.consumerNum * mcmf.costPerCDN);
+	}
+	*/
+
+	// printf("minCost: %d/%d\n", minCost, mcmf.consumerNum * mcmf.costPerCDN);
+	return unordered_set<int>(cdn.begin(), cdn.end());
+}
 
 //- GA begin
 int fitness(const Gene &p) { // 适应性
@@ -313,6 +362,7 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.05, doubl
 		T *= delta;
 
 		++iterationCnt;
+		// printf("minCost: %d/%d\n\n", minCost, mcmf.consumerNum * mcmf.costPerCDN);
 	}
 
 	printf("T=%lf iterationCnt=%d\n", T, iterationCnt);
@@ -466,14 +516,15 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	// GA();
 	// SAGA();
 	// BPSO();
+	// XJBS();
 
 	// 初始解{}，初始温度，增点概率，迭代系数，基因数，交叉率，变异率
 	if(mcmf.networkNum < 200)
-		SAGA({}, 20, 0.01, 0.99, 30, 0.95, 0.15);
+		SAGA(XJBS(), 20, 0.01, 0.99, 30, 0.95, 0.15);
 	else if(mcmf.networkNum < 500)
 		SAGA({}, 20, 0.01, 0.999, 26, 0.95, 0.15);
 	else
-		SAGA({}, 20, 0.01, 0.999, 6, 0.95, 0.15);
+		SAGA(XJBS(), 20, 0.01, 0.999, 6, 0.95, 0.15);
 
 	// unordered_set<int> cdn{0, 3, 22};
 	// printf("cost = %d\n", mcmf.minCost_Set(cdn));
