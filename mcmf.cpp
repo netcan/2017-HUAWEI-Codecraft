@@ -140,6 +140,31 @@ bool MCMF::modLabel(int &tmpCost) {
 		}
 	tmpCost += d;
 	return true;
+
+	// SLF优化
+	/*
+	memset(d, 0x3f, sizeof(d));
+	d[superSink] = 0;
+	static deque<int> que; que.push_back(superSink);
+	while(que.size())
+	{
+		int dt, u = que.front(); que.pop_front();
+		for(size_t i = 0; i < G[u].size(); ++i) {
+			Edge &e = edges[G[u][i]], &re = edges[G[u][i] ^ 1];
+			if( (re.cap - re.flow) && (dt = d[u] - e.cost) < d[e.to] )
+				(d[e.to] = dt) <= d[que.size() ? que.front() : 0]
+					? que.push_front(e.to) : que.push_back(e.to);
+		}
+	}
+	for(int u=0; u<=superSink; ++u)
+		for(size_t i = 0; i < G[u].size(); ++i) {
+			Edge &e = edges[G[u][i]];
+			e.cost += d[e.to] - d[u];
+		}
+
+	tmpCost += d[superSource];
+	return d[superSource] < INF;
+	*/
 }
 
 

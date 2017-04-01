@@ -86,11 +86,19 @@ class MCMF{
 				while (BellmanFord(superSource, superSink, flow, cost));
 			} else { // zkw算法
 				int tmpCost = 0;
+
 				do
 					do
 						bzero(vis, sizeof(vis));
 					while(aug(superSource, INF, tmpCost, cost));
 				while(modLabel(tmpCost));
+
+				// SLF优化
+				/*
+				while(modLabel(tmpCost))
+					do bzero(vis, sizeof(vis));
+					while(aug(superSource, INF, tmpCost, cost));
+				*/
 
 				for (size_t i = 0; i < G[superSource].size(); i++)
 					flow += edges[G[superSource][i]].flow;
@@ -102,12 +110,17 @@ class MCMF{
 			return cost;
 		}
 
+
 		inline void setCdn(const unordered_set<int> & cdn) {
 			reset();
 			for(int x: cdn)
 				AddEdge(superSource, x, MCMF::INF, 0);
 		}
 	public:
+		inline bool isConsumer(int u) {
+			return u >= networkNum && u < superSource;
+		}
+
 		vector<int> G[N]; // 图
 		vector<Edge> edges; // 边集，边集备份
 		int networkNum, edgeNum, consumerNum, costPerCDN, needFlow;
