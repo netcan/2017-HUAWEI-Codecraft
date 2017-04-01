@@ -34,9 +34,29 @@ unordered_set<int> directConn() {
 	return direct;
 }
 // XJBS
+bool cmp(int u1, int u2) { // 比较函数，消费降低需要的流量越低，排在越前
+	int u1cap = 0, u2cap = 0;
+	for(size_t i = 0; i < mcmf.G[u1].size(); ++i)
+		if(mcmf.isConsumer(mcmf.edges[mcmf.G[u1][i]].to)) {
+			u1cap = mcmf.edges[mcmf.G[u1][i]].cap;
+			break;
+		}
+
+	for(size_t i = 0; i < mcmf.G[u2].size(); ++i)
+		if(mcmf.isConsumer(mcmf.edges[mcmf.G[u2][i]].to)) {
+			u2cap = mcmf.edges[mcmf.G[u2][i]].cap;
+			break;
+		}
+
+	return u1cap < u2cap;
+}
+
 unordered_set<int> XJBS() {
 	unordered_set<int> init = directConn();
-	list<int> cdn(init.begin(), init.end());
+	vector<int> tmp(init.begin(), init.end());
+	sort(tmp.begin(), tmp.end(), cmp);
+
+	list<int> cdn(tmp.begin(), tmp.end());
 	int minCost = mcmf.minCost_Set(unordered_set<int>(cdn.begin(), cdn.end()));
 
 	// 删点
@@ -54,8 +74,9 @@ unordered_set<int> XJBS() {
 		}
 		// printf("minCost: %d/%d\n", minCost, mcmf.consumerNum * mcmf.costPerCDN);
 	}
-	/*
+
 	// 替换
+	/*
 	for(auto itr = cdn.begin(); itr != cdn.end(); ++itr) {
 		int u = *itr;
 		for(size_t i = 0; i < mcmf.G[u].size(); ++i) {
