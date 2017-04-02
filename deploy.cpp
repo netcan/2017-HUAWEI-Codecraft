@@ -298,8 +298,8 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.05, doubl
 
 
 	int iterationCnt = 0;
-	Gene elite; // 精英基因
-	elite.reset(mcmf.networkNum); // 忘记初始化了！导致段错误！！
+	// 忘记初始化了！导致段错误！！
+	Gene elite = genes[0]; // 精英基因
 	while(runing && T > 0.1) {
 		next_genes.clear();
 
@@ -374,6 +374,8 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.05, doubl
 		for(int idx = 0; idx < geneCnt; ++idx)
 			genes[idx] = next_genes[idx];
 
+		// 洗牌，打乱顺序，考虑是否必要
+		// random_shuffle(genes.begin(), genes.end());
 		// XXOO
 		for(int i = 0; i < geneCnt; i+=2)
 			if(Rand.Random_Real(0, 1) < crossP)
