@@ -17,6 +17,7 @@ class Random {
 
 	public:
 		Random(time_t t = time(NULL)): generator(t) {}
+		// Random(time_t t = 1491132293): generator(t) {}
 		inline uint32_t Random_Int(uint32_t min, uint32_t max) { // [min, max]
 			return std::uniform_int_distribution<uint32_t>{min, max}(generator);
 		}
