@@ -51,12 +51,13 @@ bool cmp(int u1, int u2) { // 比较函数，消费降低需要的流量越低�
 	return u1cap < u2cap;
 }
 
-unordered_set<int> XJBS() {
+unordered_set<int> XJBS(bool sorted = false) {
 	unordered_set<int> init = directConn();
-	vector<int> tmp(init.begin(), init.end());
-	sort(tmp.begin(), tmp.end(), cmp);
 
+	vector<int> tmp(init.begin(), init.end());
+	if(sorted) sort(tmp.begin(), tmp.end(), cmp);
 	list<int> cdn(tmp.begin(), tmp.end());
+
 	int minCost = mcmf.minCost_Set(unordered_set<int>(cdn.begin(), cdn.end()));
 
 	// 删点
@@ -128,7 +129,7 @@ int select(const vector<Gene> & genes) {
 	return 0;
 }
 
-void GA(int geneCnt = 20, double retain = 12, double crossP = 0.95, double mutationP = 0.15) { // 遗传算法
+void GA(unordered_set<int> init = {}, int geneCnt = 20, double retain = 12, double crossP = 0.95, double mutationP = 0.25) { // 遗传算法
 	// 初始基因数，精英保留(geneCnt-retain)，交叉率，变异率
 	int iterationCnt = 0;
 	int minCost = MCMF::INF;
@@ -136,7 +137,10 @@ void GA(int geneCnt = 20, double retain = 12, double crossP = 0.95, double mutat
 	vector<Gene> genes(geneCnt);
 	vector<Gene> next_genes(geneCnt);
 	priority_queue<Gene> que; // 最大堆选出最强的那20条染色体
-	unordered_set<int> initial = directConn();
+	unordered_set<int> initial;
+	if(init.empty()) initial = directConn();
+	else initial = move(init);
+
 	// 初始化基因
 	genes[0].set(initial, mcmf.networkNum);
 
@@ -205,7 +209,7 @@ int SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999, dou
 
 	unordered_set<int> backup, cur;
 
-	if(init.empty()) init = directConn();
+	if(init.empty()) backup = directConn();
 	else backup = move(init);
 
 	int minCost = MCMF::INF, backCost = MCMF::INF, curCost = MCMF::INF;
@@ -400,7 +404,7 @@ unordered_set<int> Tabu(unordered_set<int>init = {}, int times = MCMF::INF) { //
 
 	pair<int, X> x_best;
 	X x_now;
-	if(init.empty()) init = directConn();
+	if(init.empty()) x_now = directConn();
 	else x_now = move(init);
 
 	pair<int, X> x_next{MCMF::INF, {}}; // 转移
@@ -533,10 +537,10 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	alarm(88);
 	mcmf.loadGraph(topo, line_num);
 	// SA(Tabu({}, 20));
-	// SA({}, 20, 0.99999, 0.02);
-	// GA();
+	// SA(XJBS(true), 20, 0.99999, 0.02);
+	// GA(XJBS(true));
 	// SAGA();
-	// BPSO();
+	// BPSO(XJBS(true));
 	// XJBS();
 
 	// 初始解{}，初始温度，增点概率，迭代系数，基因数，交叉率，变异率
@@ -545,7 +549,7 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	else if(mcmf.networkNum < 500)
 		SAGA(XJBS(), 20, 0.01, 0.999, 26, 0.95, 0.15);
 	else
-		SAGA(XJBS(), 20, 0.01, 0.999, 6, 0.95, 0.15);
+		SAGA(XJBS(true), 20, 0.01, 0.999, 6, 0.95, 0.15);
 
 	// unordered_set<int> cdn{0, 3, 22};
 	// printf("cost = %d\n", mcmf.minCost_Set(cdn));
