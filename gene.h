@@ -38,6 +38,7 @@ class Gene {
 		inline void operator*(Gene &b) { // 交叉，同时改变2条染色体
 			int end = Rand.Random_Int(1, len); // 交换的位置，交换一边就行了，因为另一边不动，这里交换两边
 			int begin = Rand.Random_Int(0, end - 1);
+			// printf("begin = %d end = %d len = %d\n", begin, end, len);
 			for(int i = begin; i < end; ++i)
 				if(code[i] != b.code[i]) {
 					code[i] = !code[i];
