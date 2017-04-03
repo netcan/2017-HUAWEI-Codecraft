@@ -299,7 +299,7 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.05, doubl
 
 	int iterationCnt = 0;
 	// 忘记初始化了！导致段错误！！
-	Gene elite = genes[0]; // 精英基因
+	Gene elite{mcmf.networkNum}; // 精英基因
 	while(runing && T > 0.1) {
 		next_genes.clear();
 
@@ -357,6 +357,7 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.05, doubl
 		// 计算适应度
 		double sum = 0.0;
 		for(int idx = 0; idx < geneCnt; ++idx) {
+			if(fmin == MCMF::INF) fmin = 0;
 			int dC = genes[idx].fitness - fmin;
 			genes[idx].fitness = exp(-dC / T);
 			sum += genes[idx].fitness;
@@ -386,7 +387,7 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.05, doubl
 			if(Rand.Random_Real(0, 1) < mutationP)
 				genes[i].mutation();
 
-		minCost = min(minCost, fmin);
+		if(fmin != 0) minCost = min(minCost, fmin);
 		T *= delta;
 
 		++iterationCnt;
@@ -550,7 +551,7 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	if(mcmf.networkNum < 200)
 		SAGA(XJBS(), 20, 0.01, 0.98, 30, 0.95, 0.15);
 	else if(mcmf.networkNum < 500)
-		SAGA(XJBS(), 20, 0.01, 0.999, 26, 0.95, 0.15);
+		SAGA(XJBS(), 20, 0.01, 0.999, 24, 0.95, 0.15);
 	else
 		SAGA(XJBS(true), 20, 0.01, 0.999, 6, 0.95, 0.15);
 
