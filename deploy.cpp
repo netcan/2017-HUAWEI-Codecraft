@@ -302,8 +302,8 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.05, doubl
 	Gene elite{mcmf.networkNum}; // 精英基因
 	while(runing && T > 0.1) {
 		next_genes.clear();
-
 		int fmin = MCMF::INF;
+
 		for(int idx = 0; runing && idx < geneCnt; ++idx) {
 			unordered_set<int> s = genes[idx].to_Set(); // 每条染色体
 			int fi = mcmf.minCost_Set(s), fj;
@@ -342,48 +342,56 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.05, doubl
 				if(fi == -1 || min<double>(1, exp(-dC / T)) > Rand.Random_Real(0, 1)) {// 接受
 					genes[idx].set(cur, mcmf.networkNum);
 					genes[idx].fitness = fj;
-				} else
-					genes[idx].fitness = fi;
-
-				if(fmin > fj) {
-					fmin = fj;
-					elite = genes[idx];
+					if(fmin > fj) {
+						fmin = fj;
+						elite = genes[idx];
+					}
+				} else {
+					genes[idx].fitness = fi; // 不接收
+					if(fmin > fi) {
+						fmin = fi;
+						elite = genes[idx];
+					}
 				}
 			} else { // 无解，不接受
+				if(fmin > fi && fi != -1) {
+					fmin = fi;
+					elite = genes[idx];
+				}
 				genes[idx].fitness = (fi == -1?mcmf.networkNum * mcmf.costPerCDN:fi);
 			}
 		}
 
 		// 计算适应度
 		double sum = 0.0;
-		for(int idx = 0; idx < geneCnt; ++idx) {
+		for(int idx = 0; runing && idx < geneCnt; ++idx) {
 			if(fmin == MCMF::INF) fmin = 0;
 			int dC = genes[idx].fitness - fmin;
 			genes[idx].fitness = exp(-dC / T);
 			sum += genes[idx].fitness;
 		}
 
-		for(int idx = 0; idx < geneCnt; ++idx)
+		for(int idx = 0; runing && idx < geneCnt; ++idx)
 			genes[idx].P = genes[idx].fitness / sum;
 
 		// 轮盘赌选择
 		next_genes[0] = elite; // 精英
 
-		for(int idx = 1; idx < geneCnt; ++idx)
+		for(int idx = 1; runing && idx < geneCnt; ++idx)
 			next_genes[idx] = genes[select(genes)];
 
-		for(int idx = 0; idx < geneCnt; ++idx)
+		for(int idx = 0; runing && idx < geneCnt; ++idx)
 			genes[idx] = next_genes[idx];
 
 		// 洗牌，打乱顺序，考虑是否必要
 		// random_shuffle(genes.begin(), genes.end());
 		// XXOO
-		for(int i = 0; i < geneCnt; i+=2)
+		for(int i = 0; runing && i < geneCnt; i+=2)
 			if(Rand.Random_Real(0, 1) < crossP)
 				genes[i] * genes[i+1];
 
 		// 突变
-		for(int i = 0; i < geneCnt; ++i)
+		for(int i = 0; runing && i < geneCnt; ++i)
 			if(Rand.Random_Real(0, 1) < mutationP)
 				genes[i].mutation();
 
@@ -551,7 +559,7 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	if(mcmf.networkNum < 200)
 		SAGA(XJBS(), 20, 0.01, 0.98, 30, 0.95, 0.15);
 	else if(mcmf.networkNum < 500)
-		SAGA(XJBS(), 20, 0.01, 0.999, 24, 0.95, 0.15);
+		SAGA(XJBS(), 200, 0.01, 0.999, 26, 0.95, 0.15);
 	else
 		SAGA(XJBS(true), 20, 0.01, 0.999, 6, 0.95, 0.15);
 
