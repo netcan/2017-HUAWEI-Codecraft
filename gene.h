@@ -31,9 +31,8 @@ class Gene {
 			for(int i = 0; i < len; ++i)
 				code[i] = Rand.Random_Int(0, 1);
 		}
-		Gene(int len) { // 随机初始化
-			reset(len);
-		}
+
+		Gene(int len): len(len), fitness(0), P(0) {}
 
 		inline void operator*(Gene &b) { // 交叉，同时改变2条染色体
 			int end = Rand.Random_Int(1, len); // 交换的位置，交换一边就行了，因为另一边不动，这里交换两边
