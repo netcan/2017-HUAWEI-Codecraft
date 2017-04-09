@@ -28,8 +28,8 @@ class MCMF{
 			Edge() {}
 			Edge(int from, int to, int cap, int flow, int cost):from(from), to(to), cap(cap), flow(flow), cost(cost), oldCost(cost) {}
 		};
-		static const int N = 1600+5;
-		static char topo[50000*1000*6];
+		static const int N = 30000+5;
+		static char topo[50000*1000*6]; // 网络路径数量不得超过300000条, 单条路径的节点数量不得超过10000个, 所有数值必须为大于等于0的整数，数值大小不得超过1000000。
 
 		struct {
 			int q[N];
@@ -129,9 +129,6 @@ class MCMF{
 		MCMF() {
 			needFlow = 0;
 		};
-		MCMF(int superSource, int superSink, int networkNum, int edgeNum, int consumerNum ,int costPerCDN, int needFlow = 0):
-			superSource(superSource), superSink(superSink), networkNum(networkNum), edgeNum(edgeNum),
-			consumerNum(consumerNum), costPerCDN(costPerCDN), needFlow(needFlow) {}
 		void AddEdge(int from, int to, int cap, int cost);
 		void showSolution() const;
 		void loadGraph(char * topo[MAX_EDGE_NUM], int line_num);
