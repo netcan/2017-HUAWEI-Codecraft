@@ -16,6 +16,7 @@ void MCMF::getPath(int cost) {
 		solutionPath.second.clear(); // 记得清理
 		vector<int> tmpPath;
 		bzero(vis, sizeof(vis));
+		bzero(flow, sizeof(flow));
 		findPath(tmpPath, superSource, INF, INF);
 	}
 
@@ -28,6 +29,7 @@ int MCMF::findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow) { /
 		solutionPath.second.back().push_back(u - networkNum); // 转换为消费节点的id
 		solutionPath.second.back().push_back(minFlow);
 		solutionPath.second.back().push_back(maxFlowServer.level); // 档次
+		flow[*solutionPath.second.back().begin()] += minFlow;
 		return minFlow;
 	}
 
@@ -238,10 +240,24 @@ void MCMF::loadGraph(char * topo[MAX_EDGE_NUM], int line_num) {
 	edgeNum = edges.size(); // 边数
 	costPerCDN = maxFlowServer.cost; // 以最大档次的费用为准
 	solutionPath.first = INF;
+	sort(servers.begin(), servers.end());
 }
 
 const char* MCMF::outputPath() {
 	// getPath(solutionPath.first, true); // 放到最后才遍历路径，提高性能
+	for(int u = 0; u < networkNum; ++u) { // 找到最适合的服务器来替换
+		if(flow[u]) {
+			// printf("node: %d flow: %d\n", u, flow[u]);
+			vector<Server>::iterator it;
+			if( (it = lower_bound(servers.begin(), servers.end(), flow[u]))  != servers.end())
+				flow[u] = it->level;
+			else flow[u] = servers.back().level; // 最大的level
+		}
+	}
+
+	for(size_t i = 0; i < solutionPath.second.size(); ++i)
+		solutionPath.second[i].back() = flow[solutionPath.second[i].front()];
+
 	char buffer[10];
 	char *pt = topo, *pb = buffer;
 	snprintf(buffer, sizeof(buffer), "%ld\n\n", solutionPath.second.size());

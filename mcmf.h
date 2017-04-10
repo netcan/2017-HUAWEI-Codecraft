@@ -34,6 +34,13 @@ class MCMF{
 			Server() {
 				level = outFlow = cost = 0;
 			}
+			bool operator<(const Server &b) const {
+				if(this->outFlow != b.outFlow) return this->outFlow < b.outFlow;
+				else return this->cost < b.cost;
+			}
+			bool operator<(int flow) const {
+				return this->outFlow < flow;
+			}
 		};
 
 		static const int N = 30000+5;
@@ -67,6 +74,7 @@ class MCMF{
 		vector<Server> servers; // 服务器
 		Server maxFlowServer;
 		int deployCost[10000+5]; // 节点部署费用
+		int flow[10000+5]; // 节点流出的流量
 
 		bool vis[N]; // 标记指针
 		bool mcmfMethod = 1; // 0为BellmanFord最小费用流，1为ZKW最小费用流算法
