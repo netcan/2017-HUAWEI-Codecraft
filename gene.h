@@ -20,7 +20,7 @@ using namespace std;
 class Gene {
 	private:
 		int len; // 长度，0-1200
-		bitset<1024> code;
+		bitset<10000+5> code;
 	public:
 		double fitness; // 适应度/费用
 		double P; // 选中概率

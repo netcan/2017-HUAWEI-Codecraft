@@ -548,26 +548,27 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 {
 	Signal(SIGALRM, timeOutHandler);
 	// 启动计时器
-	alarm(88);
+	alarm(87);
 	mcmf.loadGraph(topo, line_num);
 
-	unordered_set<int> cdn = XJBS(true);
-	printf("cost=%d\n", mcmf.minCost_Set(cdn));
+	// SA(XJBS(true), 20, 0.99999, 0.02);
+
+	// unordered_set<int> cdn = XJBS(true);
+	// printf("cost=%d\n", mcmf.minCost_Set(cdn));
 
 	// SA(Tabu({}, 20));
-	// SA(XJBS(true), 20, 0.99999, 0.02);
 	// GA(XJBS(true));
 	// SAGA();
 	// BPSO(XJBS(true));
 	// XJBS();
 
 	// 初始解{}，初始温度，增点概率，迭代系数，基因数，交叉率，变异率
-	// if(mcmf.networkNum < 200)
-		// SAGA(XJBS(), 200, 0.01, 0.98, 30, 0.95, 0.15);
-	// else if(mcmf.networkNum < 500)
-		// SAGA(XJBS(), 200, 0.01, 0.999, 50, 0.95, 0.15);
-	// else
-		// SAGA(XJBS(true), 200, 0.01, 0.999, 6, 0.95, 0.15);
+	if(mcmf.networkNum < 200)
+		SAGA(XJBS(), 200, 0.01, 0.98, 30, 0.95, 0.15);
+	else if(mcmf.networkNum < 500)
+		SAGA(XJBS(), 200, 0.01, 0.999, 50, 0.95, 0.15);
+	else
+		SAGA(XJBS(true), 200, 0.01, 0.999, 6, 0.95, 0.15);
 
 	// unordered_set<int> cdn{0, 3, 22};
 	// printf("cost = %d\n", mcmf.minCost_Set(cdn));
