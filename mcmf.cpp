@@ -23,21 +23,22 @@ void MCMF::getPath(int cost) {
 
 int MCMF::findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow) { // dfs，深搜路径，路径上的最小流量，总流量
 	if(vis[u]) return 0;
-	else if(u >= networkNum && u < superSource) { // 到达消费节点，找到一条路径
+	else if(isConsumer(u)) { // 到达消费节点，找到一条路径
 		solutionPath.second.push_back(tmpPath);
 		solutionPath.second.back().push_back(u - networkNum); // 转换为消费节点的id
 		solutionPath.second.back().push_back(minFlow);
+		solutionPath.second.back().push_back(maxFlowServer.level); // 档次
 		return minFlow;
 	}
 
 	vis[u] = true;
-	if(u != superSource) tmpPath.push_back(u);
+	if(u < superSource) tmpPath.push_back(u);
 
 	int tf = totalFlow;
 	for(size_t i = 0; i < G[u].size(); ++i) {
 		Edge &e = edges[G[u][i]];
-		// printf("%d->%d flow: %d\n", e.from, e.to, e.flow);
 		if(e.flow > 0) { // 流过的流量>0
+			// printf("%d->%d flow: %d\n", e.from, e.to, e.flow);
 			int v = e.to;
 			if(!vis [v]) {
 				if(totalFlow > 0) {
@@ -53,7 +54,7 @@ int MCMF::findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow) { /
 	}
 
 	vis[u] = false;
-	tmpPath.pop_back();
+	if(u < superSource) tmpPath.pop_back();
 	return tf;
 }
 
@@ -120,7 +121,7 @@ int MCMF::aug(int u, int minFlow, int &tmpCost, int &cost) {
 
 bool MCMF::modLabel(int &tmpCost) {
 	int d = INF;
-	for(int u=0; u<=superSink; ++u)
+	for(int u=0; u< Vn + networkNum; ++u) // 遍历完全部节点
 		if(vis[u]) {
 			for(size_t i = 0; i < G[u].size(); ++i) {
 				Edge &e = edges[G[u][i]];
@@ -130,7 +131,7 @@ bool MCMF::modLabel(int &tmpCost) {
 		}
 	if(d == INF) return false;
 
-	for(int u=0; u<=superSink; ++u)
+	for(int u=0; u<Vn + networkNum; ++u)
 		if(vis[u]) {
 			for(size_t i = 0; i < G[u].size(); ++i) {
 				edges[G[u][i]].cost -= d;
@@ -176,7 +177,7 @@ void MCMF::AddEdge(int from, int to, int cap, int cost) {
 	G[from].push_back(m - 2);
 	G[to].push_back(m - 1);
 
-	if(from < networkNum && to >= networkNum)  // 网络节点直连消费节点，计算需要的总共流量
+	if(from < networkNum && isConsumer(to))  // 网络节点直连消费节点，计算需要的总共流量
 		needFlow += cap;
 }
 
@@ -195,33 +196,49 @@ void MCMF::showSolution() const{
 }
 
 void MCMF::loadGraph(char * topo[MAX_EDGE_NUM], int line_num) {
-	sscanf(topo[0], "%d%d%d", &networkNum, &edgeNum, &consumerNum);
-	sscanf(topo[2], "%d", &costPerCDN);
+	sscanf(topo[0], "%d%d%d", &networkNum, &edgeNum, &consumerNum); // 网络节点数量 网络链路数量 消费节点数量
 
-	solutionPath.first = consumerNum * costPerCDN; // asdf
-
+	// solutionPath.first = consumerNum * costPerCDN; // 待求
 
 	superSource = consumerNum + networkNum; // 超级源点、汇点
 	superSink = consumerNum + networkNum + 1;
+	Vn = superSink + 1;
 
-	int from, to, bandwidth, cpb;
-
+	int a, b, c, d;
 	int i;
-	for(i=0; i < edgeNum; ++i) {
-		sscanf(topo[i+4], "%d%d%d%d", &from, &to, &bandwidth, &cpb);
-		AddEdge(from, to, bandwidth, cpb);
-		AddEdge(to, from, bandwidth, cpb);
+	for(i = 2; i < line_num && !isspace(topo[i][0]); ++i) {
+		sscanf(topo[i], "%d%d%d", &a, &b, &c); // 服务器硬件档次ID 输出能力 硬件成本
+		servers.push_back(Server(a, b, c));
+		if(b > maxFlowServer.outFlow) maxFlowServer = servers.back();
+		// printf("level: %d outFlow: %d cost: %d\n", a, b, c);
+	}
+	// printf("maxFlowServer level: %d outFlow: %d cost: %d\n", maxFlowServer.level, maxFlowServer.outFlow, maxFlowServer.cost);
+
+	for(++i; i < line_num && !isspace(topo[i][0]); ++i) {
+		sscanf(topo[i], "%d%d", &a, &b); // 网络节点ID 部署成本
+		deployCost[a] = b;
+		// printf("node: %d cost: %d\n", a, b);
 	}
 
-	i += 4;
+	for(++i; i < line_num && !isspace(topo[i][0]); ++i) {
+		sscanf(topo[i], "%d%d%d%d", &a, &b, &c, &d); // 链路起始节点ID 链路终止节点ID 总带宽大小 单位网络租用费
+		AddEdge(a, b, c, d);
+		AddEdge(b, a, c, d);
+		// printf("u: %d v: %d bandwidth: %d cost: %d\n", a, b, c, d);
+	}
+
 	for(++i; i < line_num; ++i) {
-		sscanf(topo[i], "%d%d%d", &from, &to, &bandwidth);
-		AddEdge(to, from + networkNum, bandwidth, 0);
-		AddEdge(from + networkNum, superSink, bandwidth, 0);
+		sscanf(topo[i], "%d%d%d", &a, &b, &c); // 消费节点ID 相连网络节点ID 视频带宽消耗需求
+		AddEdge(b, a + networkNum, c, 0); // 与网络节点相连
+		AddEdge(a + networkNum, superSink, c, 0); // 与汇点相连
+		// printf("consumer: %d connect: %d need: %d\n", a, b, c);
 
-		vector<int> path{to, from, bandwidth}; // 直连策略
-		solutionPath.second.push_back(move(path));
+		// vector<int> path{to, from, bandwidth}; // 直连策略
+		// solutionPath.second.push_back(move(path));
 	}
+	edgeNum = edges.size(); // 边数
+	costPerCDN = maxFlowServer.cost; // 以最大档次的费用为准
+	solutionPath.first = INF;
 }
 
 const char* MCMF::outputPath() {
