@@ -146,12 +146,11 @@ class MCMF{
 				AddEdge(superSource, u, MCMF::INF, 0);
 				AddEdge(u, u+Vn, maxFlowServer.outFlow, 0); // 拆点
 				for(size_t i = 0; i < G[u].size(); ++i) {
-					Edge &e = edges[G[u][i]];
-					Edge &re = edges[G[u][i] ^ 1];
+					const Edge &e = edges[G[u][i]];
 					if(e.to == superSource || e.to == u+Vn || e.cost < 0) continue;
 					AddEdge(u+Vn, e.to, e.cap, e.cost);
-					e.cost = 1000000; // 调大些
-					re.cost = 1000000;
+					edges[G[u][i]].cost = 1000000; // 调大些
+					edges[G[u][i] ^ 1].cost = 1000000;
 				}
 			}
 		}
