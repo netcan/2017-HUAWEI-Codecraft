@@ -43,7 +43,7 @@ class MCMF{
 			}
 		};
 
-		static const int N = 30000+5;
+		static const int N = 20000+5;
 		static char topo[50000*1000*6]; // 网络路径数量不得超过300000条, 单条路径的节点数量不得超过10000个, 所有数值必须为大于等于0的整数，数值大小不得超过1000000。
 
 		struct {
@@ -86,21 +86,14 @@ class MCMF{
 		bool modLabel(int &tmpCost);
 
 		inline void reset() { // 还原初始状态，删除源点
-			for(int i = G[superSource].size() - 1; i >= 0; --i) {
-				Edge &eS = edges[G[superSource][i]]; // 获取指向cdn的边
-				Edge &eV = edges[G[eS.to].back()]; // 获取cdn指向虚拟节点的边
-				G[eS.to].pop_back(); // 删除虚拟节点的指针
-				for(int j = G[eV.to].size() - 1;  j >= 0; --j)
-					G[edges[G[eV.to][j]].to].pop_back();
-				G[eV.to].clear();
-			}
-
-			G[superSource].clear(); // 清空超源的指针
-			for(int i=edges.size(); i > edgeNum; --i) edges.pop_back(); // 删除超源的边
+			for(size_t i = 0; i < G[superSource].size(); ++i)
+				G[edges[G[superSource][i]].to].pop_back(); // 删除链接超源的边
+			for(int i=G[superSource].size() * 2; i > 0; --i) edges.pop_back(); // 删除超源的边
 			for(size_t i = 0; i < edges.size(); ++i) {
-				if(mcmfMethod) edges[i].cost = edges[i].oldCost; // 恢复费用
+				if(mcmfMethod) edges[i].cost = edges[i].oldCost;
 				edges[i].flow = 0; // 重置流量
 			}
+			G[superSource].clear();
 		}
 
 		int findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow);
@@ -141,18 +134,8 @@ class MCMF{
 
 		inline void setCdn(const unordered_set<int> & cdn) {
 			reset();
-
-			for(int u: cdn) {
-				AddEdge(superSource, u, MCMF::INF, 0);
-				AddEdge(u, u+Vn, maxFlowServer.outFlow, 0); // 拆点
-				for(size_t i = 0; i < G[u].size(); ++i) {
-					const Edge &e = edges[G[u][i]];
-					if(e.to == superSource || e.to == u+Vn || e.cost < 0) continue;
-					AddEdge(u+Vn, e.to, e.cap, e.cost);
-					edges[G[u][i]].cost = 1000000; // 调大些
-					edges[G[u][i] ^ 1].cost = 1000000;
-				}
-			}
+			for(int x: cdn)
+				AddEdge(superSource, x, maxFlowServer.outFlow, 0);
 		}
 	public:
 		inline bool isConsumer(int u) {

@@ -122,7 +122,7 @@ int MCMF::aug(int u, int minFlow, int &tmpCost, int &cost) {
 
 bool MCMF::modLabel(int &tmpCost) {
 	int d = INF;
-	for(int u=0; u< Vn + networkNum; ++u) // 遍历完全部节点
+	for(int u=0; u < Vn; ++u) // 遍历完全部节点
 		if(vis[u]) {
 			for(size_t i = 0; i < G[u].size(); ++i) {
 				Edge &e = edges[G[u][i]];
@@ -132,7 +132,7 @@ bool MCMF::modLabel(int &tmpCost) {
 		}
 	if(d == INF) return false;
 
-	for(int u=0; u<Vn + networkNum; ++u)
+	for(int u=0; u < Vn; ++u)
 		if(vis[u]) {
 			for(size_t i = 0; i < G[u].size(); ++i) {
 				edges[G[u][i]].cost -= d;

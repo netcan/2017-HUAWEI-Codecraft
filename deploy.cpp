@@ -552,7 +552,7 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	mcmf.loadGraph(topo, line_num);
 
 	if(mcmf.networkNum < 200)
-		SA(XJBS(), 20, 0.99, 0.02);
+		SA(XJBS(), 20, 0.999, 0.02);
 	else
 		SA(XJBS(true), 20, 0.99999, 0.02);
 
