@@ -73,7 +73,7 @@ unordered_set<int> XJBS(bool sorted = false) {
 			itr = cdn.insert(itr, node); // 恢复
 			++itr;
 		}
-		// printf("minCost: %d/%d\n", minCost, mcmf.consumerNum * mcmf.costPerCDN);
+		// printf("cost: %d\n", minCost);
 	}
 
 	// 替换
@@ -550,11 +550,8 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	// 启动计时器
 	alarm(88);
 	mcmf.loadGraph(topo, line_num);
-	unordered_set<int> cdn = directConn();
 
-	// puts("cdn");
-	// for(auto x: cdn) printf("%d ", x);
-	// puts("");
+	unordered_set<int> cdn = XJBS(true);
 	printf("cost=%d\n", mcmf.minCost_Set(cdn));
 
 	// SA(Tabu({}, 20));

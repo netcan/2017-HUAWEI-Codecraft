@@ -89,6 +89,10 @@ class MCMF{
 
 			G[superSource].clear(); // 清空超源的指针
 			for(int i=edges.size(); i > edgeNum; --i) edges.pop_back(); // 删除超源的边
+			for(size_t i = 0; i < edges.size(); ++i) {
+				if(mcmfMethod) edges[i].cost = edges[i].oldCost; // 恢复费用
+				edges[i].flow = 0; // 重置流量
+			}
 		}
 
 		int findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow);
@@ -128,21 +132,18 @@ class MCMF{
 
 
 		inline void setCdn(const unordered_set<int> & cdn) {
+			reset();
+
 			for(int u: cdn) {
-				// puts("=============");
-				// printf("%d->%d\n", superSource, u);
-				// printf("%d->%d %d\n", u, u+Vn, maxFlowServer.outFlow);
 				AddEdge(superSource, u, MCMF::INF, 0);
 				AddEdge(u, u+Vn, maxFlowServer.outFlow, 0); // 拆点
 				for(size_t i = 0; i < G[u].size(); ++i) {
 					Edge &e = edges[G[u][i]];
 					Edge &re = edges[G[u][i] ^ 1];
-					// printf("edge: %d->%d flow: %d cap: %d cost: %d\n", e.from, e.to, e.flow, e.cap, e.cost);
 					if(e.to == superSource || e.to == u+Vn || e.cost < 0) continue;
 					AddEdge(u+Vn, e.to, e.cap, e.cost);
-					// printf("Connected: %d->%d %d %d\n", u+Vn, e.to, e.cap, e.cost);
-					e.cost = INF; // 断开出边
-					re.cost = INF;
+					e.cost = 1000000; // 调大些
+					re.cost = 1000000;
 				}
 			}
 		}

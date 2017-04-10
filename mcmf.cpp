@@ -11,7 +11,7 @@
 char MCMF::topo[50000*1000*6];
 
 void MCMF::getPath(int cost) {
-	if(cost < solutionPath.first) {
+	if(cost != -1 && cost < solutionPath.first) {
 		solutionPath.first = cost;
 		solutionPath.second.clear(); // 记得清理
 		vector<int> tmpPath;
@@ -107,7 +107,6 @@ int MCMF::aug(int u, int minFlow, int &tmpCost, int &cost) {
 	int tf = minFlow;
 	for(size_t i = 0; i < G[u].size(); ++i) {
 		Edge &e = edges[G[u][i]];
-
 		if( (e.cap - e.flow) && !e.cost && !vis[e.to]) {
 			int d = aug(e.to, min(tf, (e.cap - e.flow)), tmpCost, cost);
 			e.flow += d;
