@@ -559,7 +559,7 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	}
 	else if(mcmf.networkNum < 500){
 		mcmf.setCostPerCdnMethod(false); // 服务器费用固定
-		SA(XJBS(), 20, 0.99999, 0.02);
+		SA(XJBS(), 20, 0.999, 0.02);
 	} else {
 		mcmf.setCostPerCdnMethod(false); // 服务器费用固定
 		SA(XJBS(true), 20, 0.99999, 0.02);

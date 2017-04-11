@@ -95,10 +95,13 @@ class MCMF{
 			for (size_t i = 0; i < G[superSource].size(); i++) { // 统计总流量
 				const Edge &e = edges[G[superSource][i]];
 				flow += e.flow;
-				vector<Server>::iterator it;
-				if( (it = lower_bound(servers.begin(), servers.end(), e.flow))  != servers.end()) // >= 如果需要使用Bellmanford的话，levelPerCDN也要更新
-					levelPerCDN[e.to] = it - servers.begin(); // 存放下标
-				else levelPerCDN[e.to] = servers.size() - 1; // 最大的level
+
+				if(costPerCDNMethod || cost < solutionPath.first) {
+					vector<Server>::iterator it;
+					if( (it = lower_bound(servers.begin(), servers.end(), e.flow))  != servers.end()) // >= 如果需要使用Bellmanford的话，levelPerCDN也要更新
+						levelPerCDN[e.to] = it - servers.begin(); // 存放下标
+					else levelPerCDN[e.to] = servers.size() - 1; // 最大的level
+				}
 			}
 			if(flow < needFlow) return -1;
 			// 计算部署费用
