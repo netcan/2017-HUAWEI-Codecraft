@@ -74,7 +74,7 @@ class MCMF{
 		vector<Server> servers; // 服务器
 		Server maxFlowServer;
 		int deployCost[10000+5]; // 节点部署费用
-		int levelPerCDN[10000 + 5]; // 存放每个节点最适合的服务器档次
+		int levelPerCDN[10000 + 5]; // 存放每个节点最适合的服务器档次（下标）
 		bool costPerCDNMethod = false; // 服务器费用计算策略，false为固定费用，true为动态费用，默认为固定
 
 		bool vis[N]; // 标记指针
@@ -110,7 +110,7 @@ class MCMF{
 
 				do
 					do
-						bzero(vis, sizeof(vis));
+					memset(vis, 0, sizeof(vis[0]) * Vn);
 					while(aug(superSource, INF, tmpCost, cost));
 				while(modLabel(tmpCost));
 
@@ -119,7 +119,7 @@ class MCMF{
 				while(modLabel(tmpCost))
 					do bzero(vis, sizeof(vis));
 					while(aug(superSource, INF, tmpCost, cost));
-				*/
+					*/
 
 				for (size_t i = 0; i < G[superSource].size(); i++) { // 统计总流量
 					const Edge &e = edges[G[superSource][i]];

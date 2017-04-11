@@ -15,7 +15,7 @@ void MCMF::getPath(int cost) {
 		solutionPath.first = cost;
 		solutionPath.second.clear(); // 记得清理
 		vector<int> tmpPath;
-		bzero(vis, sizeof(vis));
+		memset(vis, 0, sizeof(vis[0]) * Vn);
 		findPath(tmpPath, superSource, INF, INF);
 	}
 
@@ -143,7 +143,7 @@ bool MCMF::modLabel(int &tmpCost) {
 
 	// SLF优化
 	/*
-	memset(d, 0x3f, sizeof(d));
+	memset(d, 0x3f, sizeof(int) * Vn);
 	d[superSink] = 0;
 	static deque<int> que; que.push_back(superSink);
 	while(que.size())
