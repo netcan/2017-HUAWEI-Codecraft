@@ -74,7 +74,8 @@ class MCMF{
 		vector<Server> servers; // 服务器
 		Server maxFlowServer;
 		int deployCost[10000+5]; // 节点部署费用
-		int flow[10000+5]; // 节点流出的流量
+		int levelPerCDN[10000 + 5]; // 存放每个节点最适合的服务器档次
+		bool costPerCDNMethod = false; // 服务器费用计算策略，false为固定费用，true为动态费用，默认为固定
 
 		bool vis[N]; // 标记指针
 		bool mcmfMethod = 1; // 0为BellmanFord最小费用流，1为ZKW最小费用流算法
@@ -120,13 +121,28 @@ class MCMF{
 					while(aug(superSource, INF, tmpCost, cost));
 				*/
 
-				for (size_t i = 0; i < G[superSource].size(); i++)
-					flow += edges[G[superSource][i]].flow;
+				for (size_t i = 0; i < G[superSource].size(); i++) { // 统计总流量
+					const Edge &e = edges[G[superSource][i]];
+					flow += e.flow;
+					vector<Server>::iterator it;
+					if( (it = lower_bound(servers.begin(), servers.end(), e.flow))  != servers.end()) // >= 如果需要使用Bellmanford的话，levelPerCDN也要更新
+						levelPerCDN[e.to] = it - servers.begin(); // 存放下标
+					else levelPerCDN[e.to] = servers.size() - 1; // 最大的level
+				}
 			}
 
 			if(flow < needFlow) return -1;
-			for(auto c: cdn) cost += deployCost[c];
-			cost += G[superSource].size() * costPerCDN;
+			// 计算部署费用
+			for(auto c: cdn) {
+				cost += deployCost[c];
+				if(costPerCDNMethod) cost += servers[levelPerCDN[c]].cost;
+				else cost += costPerCDN;
+			}
+
+			// cost += G[superSource].size() * costPerCDN;
+			// 计算服务器成本
+
+
 			if(cost < solutionPath.first) getPath(cost); // 更新方案
 			return cost;
 		}
@@ -150,6 +166,9 @@ class MCMF{
 		MCMF() {
 			needFlow = 0;
 		};
+		inline void setCostPerCdnMethod(bool x) {
+			costPerCDNMethod = x;
+		}
 		void AddEdge(int from, int to, int cap, int cost);
 		void showSolution() const;
 		void loadGraph(char * topo[MAX_EDGE_NUM], int line_num);
