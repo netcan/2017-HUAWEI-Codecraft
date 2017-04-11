@@ -61,10 +61,12 @@ unordered_set<int> XJBS(bool sorted = false) {
 	int minCost = mcmf.minCost_Set(unordered_set<int>(cdn.begin(), cdn.end()));
 
 	// 删点
+	int iterationCnt = 0;
 	for(auto itr = cdn.begin(); itr != cdn.end(); ) {
 		int node = *itr;
 		int cost = -1;
 		itr = cdn.erase(itr);
+		++iterationCnt;
 		if( (cost = mcmf.minCost_Set(unordered_set<int>(cdn.begin(), cdn.end()))) < minCost && cost != -1) {
 			minCost = cost;
 			// printf("deleted: %d\n", node);
@@ -101,7 +103,7 @@ unordered_set<int> XJBS(bool sorted = false) {
 	}
 	*/
 
-	// printf("minCost: %d/%d\n", minCost, mcmf.consumerNum * mcmf.costPerCDN);
+	// printf("minCost: %d/%d iterationCnt: %d\n", minCost, mcmf.consumerNum * mcmf.costPerCDN, iterationCnt);
 	return unordered_set<int>(cdn.begin(), cdn.end());
 }
 

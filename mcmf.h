@@ -24,9 +24,9 @@ using namespace std;
 class MCMF{
 	private:
 		struct Edge{
-			int from, to, cap, flow ,cost, oldCost;
+			int to, cap, flow ,cost, oldCost;
 			Edge() {}
-			Edge(int from, int to, int cap, int flow, int cost):from(from), to(to), cap(cap), flow(flow), cost(cost), oldCost(cost) {}
+			Edge(int to, int cap, int flow, int cost): to(to), cap(cap), flow(flow), cost(cost), oldCost(cost) {}
 		};
 		struct Server {
 			int level, outFlow, cost;
@@ -46,42 +46,17 @@ class MCMF{
 		static const int N = 20000+5;
 		static char topo[50000*1000*6]; // 网络路径数量不得超过300000条, 单条路径的节点数量不得超过10000个, 所有数值必须为大于等于0的整数，数值大小不得超过1000000。
 
-		struct {
-			int q[N];
-			int tail, head;
-			void reset() {
-				tail = head = 0;
-			}
-			bool empty() {
-				return tail == head;
-			}
-			void push(int x) {
-				q[tail] = x;
-				tail = (tail + 1) % N;
-			}
-			void pop() {
-				if(empty()) return;
-				head = (head + 1) % N;
-			}
-			int front() {
-				return q[head];
-			}
-
-		} queue;
-
 		int Vn, superSource, superSink; // 总节点数，超级源点/汇点，需要的流量
-		int d[N], f[N], p[N]; // 最小费用，当前流量，父节点（增广路径），中间变量
+		int d[N];
+		bool vis[N]; // 标记数组
 		vector<Server> servers; // 服务器
 		Server maxFlowServer;
 		int deployCost[10000+5]; // 节点部署费用
 		int levelPerCDN[10000 + 5]; // 存放每个节点最适合的服务器档次（下标）
 		bool costPerCDNMethod = false; // 服务器费用计算策略，false为固定费用，true为动态费用，默认为固定
 
-		bool vis[N]; // 标记指针
-		bool mcmfMethod = 1; // 0为BellmanFord最小费用流，1为ZKW最小费用流算法
 		pair<int, vector<vector<int>>> solutionPath; // 当前可行解，路径
 
-		bool BellmanFord(int s, int t, int &flow, int &cost);
 		// ZKW算法
 		int aug(int u, int minFlow, int &tmpCost, int &cost);
 		bool modLabel(int &tmpCost);
@@ -91,7 +66,7 @@ class MCMF{
 				G[edges[G[superSource][i]].to].pop_back(); // 删除链接超源的边
 			for(int i=G[superSource].size() * 2; i > 0; --i) edges.pop_back(); // 删除超源的边
 			for(size_t i = 0; i < edges.size(); ++i) {
-				if(mcmfMethod) edges[i].cost = edges[i].oldCost;
+				edges[i].cost = edges[i].oldCost;
 				edges[i].flow = 0; // 重置流量
 			}
 			G[superSource].clear();
@@ -102,35 +77,29 @@ class MCMF{
 
 		inline int minCost(const unordered_set<int> &cdn) { // 调用setCDN后再调用minCost!! 注意不能连续调用多次minCost!!!
 			int cost = 0, flow = 0;
+			int tmpCost = 0;
 
-			if(mcmfMethod == 0) { // BellmanFord算法
-				while (BellmanFord(superSource, superSink, flow, cost));
-			} else { // zkw算法
-				int tmpCost = 0;
-
+			do
 				do
-					do
 					memset(vis, 0, sizeof(vis[0]) * Vn);
-					while(aug(superSource, INF, tmpCost, cost));
-				while(modLabel(tmpCost));
+				while(aug(superSource, INF, tmpCost, cost));
+			while(modLabel(tmpCost));
 
-				// SLF优化
-				/*
-				while(modLabel(tmpCost))
-					do bzero(vis, sizeof(vis));
-					while(aug(superSource, INF, tmpCost, cost));
-					*/
+			// SLF优化
+			/*
+			   while(modLabel(tmpCost))
+			   do bzero(vis, sizeof(vis));
+			   while(aug(superSource, INF, tmpCost, cost));
+			*/
 
-				for (size_t i = 0; i < G[superSource].size(); i++) { // 统计总流量
-					const Edge &e = edges[G[superSource][i]];
-					flow += e.flow;
-					vector<Server>::iterator it;
-					if( (it = lower_bound(servers.begin(), servers.end(), e.flow))  != servers.end()) // >= 如果需要使用Bellmanford的话，levelPerCDN也要更新
-						levelPerCDN[e.to] = it - servers.begin(); // 存放下标
-					else levelPerCDN[e.to] = servers.size() - 1; // 最大的level
-				}
+			for (size_t i = 0; i < G[superSource].size(); i++) { // 统计总流量
+				const Edge &e = edges[G[superSource][i]];
+				flow += e.flow;
+				vector<Server>::iterator it;
+				if( (it = lower_bound(servers.begin(), servers.end(), e.flow))  != servers.end()) // >= 如果需要使用Bellmanford的话，levelPerCDN也要更新
+					levelPerCDN[e.to] = it - servers.begin(); // 存放下标
+				else levelPerCDN[e.to] = servers.size() - 1; // 最大的level
 			}
-
 			if(flow < needFlow) return -1;
 			// 计算部署费用
 			for(auto c: cdn) {
@@ -141,7 +110,6 @@ class MCMF{
 
 			// cost += G[superSource].size() * costPerCDN;
 			// 计算服务器成本
-
 
 			if(cost < solutionPath.first) getPath(cost); // 更新方案
 			return cost;

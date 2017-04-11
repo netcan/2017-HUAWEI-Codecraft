@@ -59,46 +59,6 @@ int MCMF::findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow) { /
 	return tf;
 }
 
-bool MCMF::BellmanFord(int s, int t, int &flow, int &cost) {
-	memset(d, 0x3f, sizeof(d));
-	bzero(vis, sizeof(vis));
-	vis[s] = 1; d[s] = 0; f[s] = MCMF::INF; p[s] = 0;
-
-	queue.reset();
-	queue.push(s);
-
-	while (!queue.empty()) {
-		int u = queue.front(); queue.pop();
-		vis[u] = 0;
-
-		for (size_t i = 0; i < G[u].size(); i++) {
-			const Edge &e = edges[G[u][i]];
-			if (e.cap > e.flow && d[e.to] > d[u] + e.cost) {
-				d[e.to] = d[u] + e.cost;
-				p[e.to] = G[u][i];
-				f[e.to] = min(f[u], e.cap - e.flow);
-				if (!vis[e.to]) {
-					vis[e.to] = true;
-					queue.push(e.to);
-				}
-			}
-		}
-	}
-
-	if (d[t] == INF) return false;
-
-	flow += f[t];
-	cost += d[t] * f[t];
-
-	int u = t;
-	while (u != s) {
-		edges[p[u]].flow += f[t];
-		edges[p[u] ^ 1].flow -= f[t];
-		u = edges[p[u]].from;
-	}
-	return true;
-}
-
 int MCMF::aug(int u, int minFlow, int &tmpCost, int &cost) {
 	if(u == superSink) { // 到达终点
 		cost += tmpCost * minFlow;
@@ -170,8 +130,8 @@ bool MCMF::modLabel(int &tmpCost) {
 
 
 void MCMF::AddEdge(int from, int to, int cap, int cost) {
-	edges.push_back(Edge(from, to, cap, 0, cost));
-	edges.push_back(Edge(to, from, 0, 0, -cost));
+	edges.push_back(Edge(to, cap, 0, cost));
+	edges.push_back(Edge(from, 0, 0, -cost));
 
 	int m = edges.size();
 	G[from].push_back(m - 2);
