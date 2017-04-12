@@ -54,6 +54,9 @@ class MCMF{
 		int deployCost[10000+5]; // 节点部署费用
 		int levelPerCDN[10000 + 5]; // 存放每个节点最适合的服务器档次（下标）
 		bool costPerCDNMethod = false; // 服务器费用计算策略，false为固定费用，true为动态费用，默认为固定
+#ifdef _DEBUG
+		int realMinCost = INF; // 保存真实的最小费用，最后打印，调试用
+#endif
 
 		pair<int, vector<vector<int>>> solutionPath; // 当前可行解，路径
 
@@ -96,23 +99,33 @@ class MCMF{
 				const Edge &e = edges[G[superSource][i]];
 				flow += e.flow;
 
-				if(costPerCDNMethod || cost < solutionPath.first) {
-					vector<Server>::iterator it;
-					if( (it = lower_bound(servers.begin(), servers.end(), e.flow))  != servers.end()) // >= 如果需要使用Bellmanford的话，levelPerCDN也要更新
-						levelPerCDN[e.to] = it - servers.begin(); // 存放下标
-					else levelPerCDN[e.to] = servers.size() - 1; // 最大的level
-				}
+				vector<Server>::iterator it;
+				if( (it = lower_bound(servers.begin(), servers.end(), e.flow))  != servers.end()) // >= 如果需要使用Bellmanford的话，levelPerCDN也要更新
+					levelPerCDN[e.to] = it - servers.begin(); // 存放下标
+				else levelPerCDN[e.to] = servers.size() - 1; // 最大的level
+
 			}
 			if(flow < needFlow) return -1;
 			// 计算部署费用
+#ifdef _DEBUG
+			int realCost = cost;
+#endif
 			for(auto c: cdn) {
 				cost += deployCost[c];
-				if(costPerCDNMethod) cost += servers[levelPerCDN[c]].cost;
+#ifdef _DEBUG
+				realCost += deployCost[c];
+#endif
+				if(costPerCDNMethod) // 动态调节服务器费用
+					cost += servers[levelPerCDN[c]].cost;
 				else cost += costPerCDN;
+#ifdef _DEBUG
+				realCost += servers[levelPerCDN[c]].cost;
+#endif
 			}
 
-			// cost += G[superSource].size() * costPerCDN;
-			// 计算服务器成本
+#ifdef _DEBUG
+			realMinCost = min(realMinCost, realCost);
+#endif
 
 			if(cost < solutionPath.first) getPath(cost); // 更新方案
 			return cost;

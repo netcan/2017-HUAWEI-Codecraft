@@ -274,7 +274,7 @@ int SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999, dou
 		// printf("%d ", x);
 	// puts("\n=====Solution======");
 	// mcmf.showSolution();
-	printf("minCost: %d/%d cdnNum: %ld\n\n", minCost, mcmf.consumerNum * mcmf.costPerCDN, backup.size());
+	// printf("minCost: %d/%d cdnNum: %ld\n", minCost, mcmf.consumerNum * mcmf.costPerCDN, backup.size());
 	return minCost;
 }
 //- 模拟退火 end

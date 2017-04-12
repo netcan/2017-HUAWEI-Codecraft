@@ -204,6 +204,10 @@ void MCMF::loadGraph(char * topo[MAX_EDGE_NUM], int line_num) {
 
 const char* MCMF::outputPath() {
 	// getPath(solutionPath.first, true); // 放到最后才遍历路径，提高性能
+#ifdef _DEBUG
+	printf("minCost: %d/%d\n", realMinCost, mcmf.consumerNum * mcmf.costPerCDN);
+#endif
+
 	char buffer[10];
 	char *pt = topo, *pb = buffer;
 	snprintf(buffer, sizeof(buffer), "%ld\n\n", solutionPath.second.size());
@@ -222,19 +226,3 @@ const char* MCMF::outputPath() {
 
 MCMF mcmf;
 
-// int main() {
-	// freopen("case_example/case4.txt", "r", stdin);
-	// unordered_set<int> cdn = {
-		// 12, 15, 20, 22, 26, 37, 48
-	// };
-	// // load graph
-	// // set CDN and build super Source
-	// mcmf.loadGraph();
-
-	// puts("======Output=======");
-	// mcmf.setCdn(cdn);
-	// mcmf.minCost();
-	// mcmf.showPath();
-
-	// return 0;
-// }
