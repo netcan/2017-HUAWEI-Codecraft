@@ -204,9 +204,7 @@ void MCMF::loadGraph(char * topo[MAX_EDGE_NUM], int line_num) {
 
 const char* MCMF::outputPath() {
 	// getPath(solutionPath.first, true); // 放到最后才遍历路径，提高性能
-#ifdef _DEBUG
-	printf("minCost: %d/%d\n", realMinCost, mcmf.consumerNum * mcmf.costPerCDN);
-#endif
+	// showRealMinCost();
 
 	char buffer[10];
 	char *pt = topo, *pb = buffer;

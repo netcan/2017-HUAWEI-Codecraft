@@ -138,6 +138,12 @@ class MCMF{
 				AddEdge(superSource, x, maxFlowServer.outFlow, 0);
 		}
 	public:
+		void inline showRealMinCost() {
+#ifdef _DEBUG
+			printf("\x1B[31mReal minCost: %d/%d\x1B[0m\n", realMinCost, consumerNum * costPerCDN);
+#endif
+		}
+
 		inline bool isConsumer(int u) {
 			return u >= networkNum && u < superSource;
 		}

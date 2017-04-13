@@ -218,8 +218,7 @@ int SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999, dou
 	backCost = mcmf.minCost_Set(backup);
 	minCost = min(minCost, backCost);
 
-
-	int iterationCnt = 0, poiCnt = 0;
+	int iterationCnt = 0;
 	while(runing && T > 0.1) {
 		//- 随机选点u
 		int u = -1;
@@ -241,10 +240,8 @@ int SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999, dou
 			else cur.insert(x);
 		}
 
-		if(Rand.Random_Real(0, 1) < poi) {
-			++poiCnt;
+		if(Rand.Random_Real(0, 1) < poi)
 			cur.insert(Rand.Random_Int(0, mcmf.networkNum - 1)); // 增加一个点
-		}
 
 		curCost = mcmf.minCost_Set(cur);
 		++iterationCnt;
@@ -261,6 +258,7 @@ int SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999, dou
 			} else {
 				cur.clear();
 			}
+
 			minCost = min(minCost, backCost);
 	 	}
 		T *= delta;
@@ -268,13 +266,15 @@ int SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999, dou
 		// printf("T=%lf iterationCnt=%d minCost = %d\n", T, iterationCnt, minCost);
 	}
 
-	printf("T=%lf iterationCnt=%d poiCnt=%d\n", T, iterationCnt, poiCnt);
+#ifdef _DEBUG
+	printf("T=%lf iterationCnt=%d\n", T, iterationCnt);
+	mcmf.showRealMinCost();
+#endif
 	// printf("Deploy CDN(%ld):\n", backup.size());
 	// for(int x: backup)
 		// printf("%d ", x);
 	// puts("\n=====Solution======");
 	// mcmf.showSolution();
-	// printf("minCost: %d/%d cdnNum: %ld\n", minCost, mcmf.consumerNum * mcmf.costPerCDN, backup.size());
 	return minCost;
 }
 //- 模拟退火 end
