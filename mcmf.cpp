@@ -36,7 +36,8 @@ int MCMF::findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow) { /
 	if(u < superSource) tmpPath.push_back(u);
 
 	int tf = totalFlow;
-	for(size_t i = 0; i < G[u].size(); ++i) {
+	size_t Gu_size = G[u].size();
+	for(size_t i = 0; i < Gu_size; ++i) {
 		Edge &e = edges[G[u][i]];
 		if(e.flow > 0) { // 流过的流量>0
 			// printf("%d->%d flow: %d\n", e.from, e.to, e.flow);
