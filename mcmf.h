@@ -51,7 +51,6 @@ class MCMF{
 		bool vis[N]; // 标记数组
 		vector<Server> servers; // 服务器
 		Server maxFlowServer;
-		int levelPerCDN[10000 + 5]; // 存放每个节点最适合的服务器档次（下标）
 		bool costPerCDNMethod = false; // 服务器费用计算策略，false为固定费用，true为动态费用，默认为固定
 #ifdef _DEBUG
 		int realMinCost = INF; // 保存真实的最小费用，最后打印，调试用
@@ -73,19 +72,29 @@ class MCMF{
 			}
 			G[superSource].clear();
 		}
+		inline void calcEvaluation() { // 评估函数
+			for(int u = 0; u < networkNum; ++u)
+				nodes[u].evaluation =  nodes[u].nodeFlow * 1000.0 / nodes[u].deployCost;
+		}
 
 		int findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow);
 		void getPath(int cost);
-
-		inline int minCost(const unordered_set<int> &cdn) { // 调用setCDN后再调用minCost!! 注意不能连续调用多次minCost!!!
+		inline int pathFlowCost() { // 路径流量费
 			int cost = 0, flow = 0;
 			int tmpCost = 0;
-
-			do
-				do
+			do {
+				int f;
+				do {
 					memset(vis, 0, sizeof(vis[0]) * Vn);
-				while(aug(superSource, INF, tmpCost, cost));
+					f = aug(superSource, INF, tmpCost, cost);
+					flow += f;
+				}
+				while(f);
+			}
 			while(modLabel(tmpCost));
+			if(flow < needFlow) return -1;
+			// printf("path cost: %d flow: %d\n", cost, flow);
+			return cost;
 
 			// SLF优化
 			/*
@@ -93,32 +102,36 @@ class MCMF{
 			   do bzero(vis, sizeof(vis));
 			   while(aug(superSource, INF, tmpCost, cost));
 			*/
+		}
 
-			for (size_t i = 0; i < G[superSource].size(); i++) { // 统计总流量
+		inline int minCost(const unordered_set<int> &cdn) { // 调用setCDN后再调用minCost!! 注意不能连续调用多次minCost!!!
+
+			int cost = pathFlowCost();
+			if(cost == -1) return -1;
+
+			for (size_t i = 0; i < G[superSource].size(); i++) { // 降档
 				const Edge &e = edges[G[superSource][i]];
-				flow += e.flow;
 
 				vector<Server>::iterator it;
-				if( (it = lower_bound(servers.begin(), servers.end(), e.flow))  != servers.end()) // >= 如果需要使用Bellmanford的话，levelPerCDN也要更新
-					levelPerCDN[e.to] = it - servers.begin(); // 存放下标
-				else levelPerCDN[e.to] = servers.size() - 1; // 最大的level
-
+				if( (it = lower_bound(servers.begin(), servers.end(), e.flow))  != servers.end()) // >= 降档
+					nodes[e.to].bestCdnId = it - servers.begin(); // 存放下标
+				else nodes[e.to].bestCdnId = servers.size() - 1; // 最大的level
 			}
-			if(flow < needFlow) return -1;
+
 			// 计算部署费用
 #ifdef _DEBUG
 			int realCost = cost;
 #endif
 			for(auto c: cdn) {
-				cost += deployCost[c];
+				cost += nodes[c].deployCost;
 #ifdef _DEBUG
-				realCost += deployCost[c];
+				realCost += nodes[c].deployCost;
 #endif
 				if(costPerCDNMethod) // 动态调节服务器费用
-					cost += servers[levelPerCDN[c]].cost;
+					cost += servers[nodes[c].bestCdnId].cost;
 				else cost += costPerCDN;
 #ifdef _DEBUG
-				realCost += servers[levelPerCDN[c]].cost;
+				realCost += servers[nodes[c].bestCdnId].cost;
 #endif
 			}
 
@@ -137,8 +150,16 @@ class MCMF{
 				AddEdge(superSource, x, maxFlowServer.outFlow, 0);
 		}
 	public:
-		int deployCost[10000+5]; // 节点部署费用
-		int nodeFlow[100000 + 5]; // 每个节点的流量
+		struct Node{
+			int deployCost; // 节点部署费用
+			int nodeFlow; // 每个节点的流量
+			int bestCdnId; // 存放每个节点最适合的服务器档次（下标）
+			double evaluation; // 每个节点的评估值
+			Node() {
+				deployCost = bestCdnId = nodeFlow = evaluation = 0;
+			}
+		} nodes[10000 + 5];
+
 		vector<int> G[N]; // 图
 		vector<Edge> edges; // 边集
 		int networkNum, edgeNum, consumerNum, needFlow, costPerCDN = 0;
@@ -156,7 +177,6 @@ class MCMF{
 
 
 		MCMF() {
-			memset(nodeFlow, 0, sizeof(nodeFlow));
 			needFlow = 0;
 		};
 		inline void setCostPerCdnMethod(bool x) {

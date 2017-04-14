@@ -28,7 +28,7 @@ int MCMF::findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow) { /
 		vector<int> &b = solutionPath.second.back();
 		b.push_back(u - networkNum); // 转换为消费节点的id
 		b.push_back(minFlow);
-		b.push_back(servers[levelPerCDN[b.front()]].level); // 档次
+		b.push_back(servers[nodes[b.front()].bestCdnId].level); // 档次
 		return minFlow;
 	}
 
@@ -141,7 +141,7 @@ void MCMF::AddEdge(int from, int to, int cap, int cost) {
 		if(isConsumer(to))  // 网络节点直连消费节点，计算需要的总共流量
 			needFlow += cap;
 		if(to < superSource)
-			nodeFlow[from] += cap;
+			nodes[from].nodeFlow += cap;
 	}
 }
 
@@ -181,7 +181,7 @@ void MCMF::loadGraph(char * topo[MAX_EDGE_NUM], int line_num) {
 
 	for(++i; i < line_num && !isspace(topo[i][0]); ++i) {
 		sscanf(topo[i], "%d%d", &a, &b); // 网络节点ID 部署成本
-		deployCost[a] = b;
+		nodes[a].deployCost = b;
 		// printf("node: %d cost: %d\n", a, b);
 	}
 
@@ -205,6 +205,7 @@ void MCMF::loadGraph(char * topo[MAX_EDGE_NUM], int line_num) {
 	costPerCDN = maxFlowServer.cost; // 以最大档次的费用为准
 	solutionPath.first = INF;
 	sort(servers.begin(), servers.end());
+	calcEvaluation();
 }
 
 const char* MCMF::outputPath() {

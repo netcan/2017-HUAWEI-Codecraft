@@ -107,6 +107,23 @@ unordered_set<int> XJBS(bool sorted = false) {
 	return unordered_set<int>(cdn.begin(), cdn.end());
 }
 
+// 按评估值从高到低选址
+unordered_set<int> evaluationSelect() {
+	vector<pair<double, int>> evaluation;
+	unordered_set<int> cdn{};
+	for(int u = 0; u < mcmf.networkNum; ++u)
+		evaluation.push_back(make_pair(mcmf.nodes[u].evaluation, u));
+	sort(evaluation.begin(), evaluation.end(), greater_equal<pair<double, int>>());
+
+	for(int i = 0; i < mcmf.networkNum; ++i) {
+		cdn.insert(evaluation[i].second);
+		// printf("%d: %lf\n", evaluation[i].second, evaluation[i].first);
+		if(mcmf.minCost_Set(cdn) != -1) break;
+	}
+	mcmf.showRealMinCost();
+	return cdn;
+}
+
 //- GA begin
 int fitness(const Gene &p) { // 适应性
 	int cost = mcmf.minCost_Set(p.to_Set());
@@ -573,8 +590,12 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 		SA(XJBS(true), 1, 20, 0.99999, 0.02);
 	}
 
-	// unordered_set<int> cdn = {0};
+	// unordered_set<int> cdn = {
+		// 3, 7, 14, 36, 69, 103, 125, 129, 155
+	// };
+	// mcmf.minCost_Set(cdn);
 	// printf("cost=%d\n", mcmf.minCost_Set(cdn));
+	// mcmf.showRealMinCost();
 
 	// SA(Tabu({}, 20));
 	// GA(XJBS(true));
