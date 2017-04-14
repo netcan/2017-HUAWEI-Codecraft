@@ -120,8 +120,7 @@ int fitness(const Gene &p) { // 适应性
 int select(const vector<Gene> & genes) {
 	double R = Rand.Random_Real(0, 1);
 	double s = 0.0;
-	size_t genes_lens = genes.size();
-	for(size_t i = 0; i < genes_lens; ++i) {
+	for(size_t i = 0; i < genes.size(); ++i) {
 		s += genes[i].P;
 		// printf("%f/%f\n", s, R);
 		if(s >= R) {
@@ -443,8 +442,7 @@ unordered_set<int> Tabu(unordered_set<int>init = {}, int times = MCMF::INF) { //
 	while(runing && iterationCnt < times) {
 		int Len = 0;
 		for(int u: x_now) {
-			size_t mcmf_Gu_size = mcmf.G[u].size();
-			for(size_t i = 0; i < mcmf_Gu_size && runing; i+=2) {
+			for(size_t i = 0; i < mcmf.G[u].size() && runing; i+=2) {
 				++Len;
 				int v = mcmf.edges[mcmf.G[u][i]].to; // u->v
 				if(v < mcmf.networkNum) {
