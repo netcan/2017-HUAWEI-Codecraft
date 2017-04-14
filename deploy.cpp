@@ -573,7 +573,7 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 		SA(XJBS(true), 1, 20, 0.99999, 0.02);
 	}
 
-	// unordered_set<int> cdn = XJBS(true);
+	// unordered_set<int> cdn = {0};
 	// printf("cost=%d\n", mcmf.minCost_Set(cdn));
 
 	// SA(Tabu({}, 20));

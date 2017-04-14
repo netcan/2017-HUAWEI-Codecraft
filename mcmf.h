@@ -51,7 +51,6 @@ class MCMF{
 		bool vis[N]; // 标记数组
 		vector<Server> servers; // 服务器
 		Server maxFlowServer;
-		int deployCost[10000+5]; // 节点部署费用
 		int levelPerCDN[10000 + 5]; // 存放每个节点最适合的服务器档次（下标）
 		bool costPerCDNMethod = false; // 服务器费用计算策略，false为固定费用，true为动态费用，默认为固定
 #ifdef _DEBUG
@@ -138,6 +137,13 @@ class MCMF{
 				AddEdge(superSource, x, maxFlowServer.outFlow, 0);
 		}
 	public:
+		int deployCost[10000+5]; // 节点部署费用
+		int nodeFlow[100000 + 5]; // 每个节点的流量
+		vector<int> G[N]; // 图
+		vector<Edge> edges; // 边集
+		int networkNum, edgeNum, consumerNum, needFlow, costPerCDN = 0;
+		static const int INF = 0x3f3f3f3f;
+
 		void inline showRealMinCost() {
 #ifdef _DEBUG
 			printf("\x1B[31mReal minCost: %d/%d\x1B[0m\n", realMinCost, consumerNum * costPerCDN);
@@ -148,12 +154,9 @@ class MCMF{
 			return u >= networkNum && u < superSource;
 		}
 
-		vector<int> G[N]; // 图
-		vector<Edge> edges; // 边集
-		int networkNum, edgeNum, consumerNum, needFlow, costPerCDN = 0;
-		static const int INF = 0x3f3f3f3f;
 
 		MCMF() {
+			memset(nodeFlow, 0, sizeof(nodeFlow));
 			needFlow = 0;
 		};
 		inline void setCostPerCdnMethod(bool x) {

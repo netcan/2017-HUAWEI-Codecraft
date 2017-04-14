@@ -137,8 +137,12 @@ void MCMF::AddEdge(int from, int to, int cap, int cost) {
 	G[from].push_back(m - 2);
 	G[to].push_back(m - 1);
 
-	if(from < networkNum && isConsumer(to))  // 网络节点直连消费节点，计算需要的总共流量
-		needFlow += cap;
+	if(from < networkNum) {
+		if(isConsumer(to))  // 网络节点直连消费节点，计算需要的总共流量
+			needFlow += cap;
+		if(to < superSource)
+			nodeFlow[from] += cap;
+	}
 }
 
 
