@@ -169,7 +169,8 @@ void MCMF::loadGraph(char * topo[MAX_EDGE_NUM], int line_num) {
 	for(i = 2; i < line_num && !isspace(topo[i][0]); ++i) {
 		sscanf(topo[i], "%d%d%d", &a, &b, &c); // 服务器硬件档次ID 输出能力 硬件成本
 		servers.push_back(Server(a, b, c));
-		if(b > maxFlowServer.outFlow) maxFlowServer = servers.back();
+		if(maxFlowServer < servers.back()) maxFlowServer = servers.back();
+
 		// printf("level: %d outFlow: %d cost: %d\n", a, b, c);
 	}
 	// printf("maxFlowServer level: %d outFlow: %d cost: %d\n", maxFlowServer.level, maxFlowServer.outFlow, maxFlowServer.cost);

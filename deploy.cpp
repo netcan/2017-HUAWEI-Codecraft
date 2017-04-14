@@ -199,14 +199,15 @@ void GA(unordered_set<int> init = {}, int geneCnt = 20, double retain = 12, doub
 
 	// mcmf.showSolution();
 	printf("iterationCnt=%d\n", iterationCnt);
-	printf("minCost: %d/%d\n\n", minCost, mcmf.consumerNum * mcmf.costPerCDN);
+	// printf("minCost: %d/%d\n\n", minCost, mcmf.consumerNum * mcmf.costPerCDN);
+	mcmf.showRealMinCost();
 }
 
 
 //- GA end
 
 //- 模拟退火 begin
-int SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999, double poi = 0.02) { // 模拟退火，初始温度，迭代系数，0.15的增点概率
+int SA(unordered_set<int>init = {}, int innerLoop = 10, double T = 20.0, double delta = 0.99999, double poi = 0.02) { // 模拟退火，初始温度，迭代系数，0.15的增点概率
 	// double T = 20.0, delta = 0.99999; // 初始温度20, 0.999-0.999999
 
 	unordered_set<int> backup, cur;
@@ -220,47 +221,52 @@ int SA(unordered_set<int>init = {}, double T = 20.0, double delta = 0.99999, dou
 
 	int iterationCnt = 0;
 	while(runing && T > 0.1) {
-		//- 随机选点u
-		int u = -1;
-		int i = Rand.Random_Int(0, backup.size() - 1);
-		auto it = backup.begin();
-		for(; it != backup.end() && i; ++it, --i);
-		u = *it;
-		// - 选完了
 
-		// 随机选u->v
-		int v = -1;
-		do {
-			v = mcmf.edges[mcmf.G[u][Rand.Random_Int(0, mcmf.G[u].size() - 1)]].to; // (u, v)随机选点
-		} while(v >= mcmf.networkNum); // 防止移动到消费节点
-		// - 选完v了
+		for(int loop = 0; loop < innerLoop && runing; ++loop) {
+			//- 随机选点u
+			int u = -1;
+			int i = Rand.Random_Int(0, backup.size() - 1);
+			auto it = backup.begin();
+			for(; it != backup.end() && i; ++it, --i);
+			u = *it;
+			// - 选完了
 
-		for(int x: backup) {
-			if(x == u) cur.insert(v);
-			else cur.insert(x);
-		}
+			// 随机选u->v
+			int v = -1;
+			do {
+				v = mcmf.edges[mcmf.G[u][Rand.Random_Int(0, mcmf.G[u].size() - 1)]].to; // (u, v)随机选点
+			} while(v >= mcmf.networkNum); // 防止移动到消费节点
+			// - 选完v了
 
-		if(Rand.Random_Real(0, 1) < poi)
-			cur.insert(Rand.Random_Int(0, mcmf.networkNum - 1)); // 增加一个点
-
-		curCost = mcmf.minCost_Set(cur);
-		++iterationCnt;
-
-		if(curCost == -1)  {// 无解
-			cur.clear();
-		}
-		else {
-			int dC = curCost - backCost;
-			// printf("dC: %d\n", dC);
-			if(min(1.0, exp(-dC / T)) > Rand.Random_Real(0, 1))  {// 接受
-				backup = move(cur);
-				backCost = curCost;
-			} else {
-				cur.clear();
+			for(int x: backup) {
+				if(x == u) cur.insert(v);
+				else cur.insert(x);
 			}
 
-			minCost = min(minCost, backCost);
-	 	}
+			if(Rand.Random_Real(0, 1) < poi)
+				cur.insert(Rand.Random_Int(0, mcmf.networkNum - 1)); // 增加一个点
+
+			curCost = mcmf.minCost_Set(cur);
+			++iterationCnt;
+
+			if(curCost == -1)  {// 无解
+				cur.clear();
+				continue;
+			}
+			else {
+				int dC = curCost - backCost;
+				// printf("dC: %d ratio: %lf probability: %lf\n", dC, curCost * 1.0 / minCost, exp(-dC / T));
+				if(min(1.0, exp(-dC / T)) > Rand.Random_Real(0, 1))  {// 接受
+					// printf("T: %lf dC: %d ratio: %lf\n", T, dC, curCost * 1.0 / minCost);
+					backup = move(cur);
+					backCost = curCost;
+				} else {
+					cur.clear();
+				}
+
+				minCost = min(minCost, backCost);
+			}
+		}
 		T *= delta;
 
 		// printf("T=%lf iterationCnt=%d minCost = %d\n", T, iterationCnt, minCost);
@@ -295,8 +301,9 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.05, doubl
 	// for(int i = 0; i < geneCnt; ++i)
 		// genes[i].set(initial, mcmf.networkNum);
 	genes[0].set(initial, mcmf.networkNum);
+	unordered_set<int> direct = directConn();
 	for(int i = 1; i < geneCnt; ++i)
-		genes[i].reset(mcmf.networkNum);
+		genes[i].set(direct, mcmf.networkNum);
 
 
 	int iterationCnt = 0;
@@ -408,7 +415,8 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.05, doubl
 
 	printf("T=%lf iterationCnt=%d\n", T, iterationCnt);
 	// mcmf.showSolution();
-	printf("minCost: %d/%d\n\n", minCost, mcmf.consumerNum * mcmf.costPerCDN);
+	// printf("minCost: %d/%d\n\n", minCost, mcmf.consumerNum * mcmf.costPerCDN);
+	mcmf.showRealMinCost();
 }
 //- SAGA end
 
@@ -555,14 +563,14 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 
 	if(mcmf.networkNum < 200) {
 		mcmf.setCostPerCdnMethod(true); // 动态变动
-		SA(XJBS(), 20, 0.99, 0.02);
+		SA(XJBS(), 1, 20, 0.99, 0.02);
 	}
 	else if(mcmf.networkNum < 500){
 		mcmf.setCostPerCdnMethod(false); // 服务器费用固定
-		SA(XJBS(), 20, 0.999, 0.02);
+		SA(XJBS(), 1, 20, 0.999, 0.02);
 	} else {
 		mcmf.setCostPerCdnMethod(false); // 服务器费用固定
-		SA(XJBS(true), 20, 0.99999, 0.02);
+		SA(XJBS(true), 1, 20, 0.99999, 0.02);
 	}
 
 	// unordered_set<int> cdn = XJBS(true);
@@ -575,12 +583,18 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	// XJBS();
 
 	// 初始解{}，初始温度，增点概率，迭代系数，基因数，交叉率，变异率
-	// if(mcmf.networkNum < 200)
-		// SAGA(XJBS(), 20, 0.01, 0.99, 30, 0.95, 0.15);
-	// else if(mcmf.networkNum < 500)
-		// SAGA(XJBS(), 200, 0.01, 0.999, 50, 0.95, 0.15);
-	// else
-		// SAGA(XJBS(true), 20, 0.01, 0.999, 4, 0.95, 0.15);
+	// if(mcmf.networkNum < 200) {
+		// mcmf.setCostPerCdnMethod(false); // 动态变动
+		// SAGA(XJBS(), 2000, 0.00, 0.99, 30, 0.8, 0.05);
+	// }
+	// else if(mcmf.networkNum < 500) {
+		// mcmf.setCostPerCdnMethod(false); // 服务器费用固定
+		// SAGA(XJBS(false), 2000, 0.00, 0.99, 50, 0.8, 0.05);
+	// }
+	// else {
+		// mcmf.setCostPerCdnMethod(false); // 服务器费用固定
+		// SAGA(XJBS(true), 20, 0.00, 0.999, 6, 0.8, 0.05);
+	// }
 
 	// unordered_set<int> cdn{0, 3, 22};
 	// printf("cost = %d\n", mcmf.minCost_Set(cdn));
