@@ -253,6 +253,9 @@ class MCMF{
 		inline void setCostPerCdnMethod(bool x) {
 			costPerCDNMethod = x;
 		}
+		inline void setCostCdnGap(int x) {
+			minCostCdnGap = x;
+		}
 		void AddEdge(int from, int to, int cap, int cost);
 		void showSolution() const;
 		void loadGraph(char * topo[MAX_EDGE_NUM], int line_num);
