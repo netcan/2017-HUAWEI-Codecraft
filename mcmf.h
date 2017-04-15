@@ -50,6 +50,7 @@ class MCMF{
 		static char topo[50000*1000*6]; // 网络路径数量不得超过300000条, 单条路径的节点数量不得超过10000个, 所有数值必须为大于等于0的整数，数值大小不得超过1000000。
 
 		int Vn, superSource, superSink; // 总节点数，超级源点/汇点，需要的流量
+		size_t minCostCdnGap = 50; // 当cdn小于这个数的时候，进行贪心降档
 		int d[N];
 		bool vis[N]; // 标记数组
 		vector<Server> servers; // 服务器
@@ -108,12 +109,13 @@ class MCMF{
 		}
 
 		inline int minCost(const unordered_set<int> &cdn) { // 调用setCDN后再调用minCost!! 注意不能连续调用多次minCost!!!
-
 			int cost = pathFlowCost(), cdnCost = 0, minCdnFlowCost = INF;
 			if(cost == -1) return -1;
 
 			vector<pair<int, int>> diff; // 存放差/节点名
 			unordered_map<int, int> eId; // 存放超源到cdn的边的下标
+			bool downShift = false;
+			if(cdn.size() < minCostCdnGap) downShift = true;
 
 			for (size_t i = 0; i < G[superSource].size(); i++) { // 降档
 				Edge &e = edges[G[superSource][i]];
@@ -124,7 +126,7 @@ class MCMF{
 					nodes[e.to].bestCdnId = it - servers.begin(); // 存放下标，nodes输出路径的时候用
 				else nodes[e.to].bestCdnId = servers.size() - 1; // 最大的level
 
-				if(cdn.size() < 50) {
+				if(downShift) {
 					e.cap = servers[nodes[e.to].bestCdnId].outFlow;
 					if(nodes[e.to].bestCdnId  == 0) diff.push_back(make_pair(INF, e.to));
 					else diff.push_back(make_pair(
@@ -138,7 +140,7 @@ class MCMF{
 			minCdnFlowCost = min(minCdnFlowCost, cost + cdnCost); // 更新总费用
 			// printf("minCdnFlowCost %d\n", minCdnFlowCost);
 
-			if(cdn.size() < 50) {
+			if(downShift) {
 				sort(diff.begin(), diff.end(), greater<pair<int, int>>());
 
 				for(size_t i = 0;runing && i < diff.size(); ++i) {
@@ -159,11 +161,6 @@ class MCMF{
 						cdnCost += servers[nodes[u].bestCdnId + 1].cost - servers[nodes[u].bestCdnId].cost; // 更新Cdn费用
 						++nodes[u].bestCdnId;
 						if(cost == -1) { // 无解
-							for(size_t j = 0; j < edges.size(); ++j) {
-								edges[j].cost = edges[j].oldCost;
-								edges[j].flow = 0; // 重置流量
-							}
-							pathFlowCost();
 							break;
 						}
 					} else {// 降档成功，有解
@@ -204,7 +201,16 @@ class MCMF{
 			realMinCost = min(realMinCost, realCost);
 #endif
 
-			if(cost < solutionPath.first) getPath(cost); // 更新方案
+			if(cost < solutionPath.first) {
+				if(downShift) {
+					for(size_t j = 0; j < edges.size(); ++j) {
+						edges[j].cost = edges[j].oldCost;
+						edges[j].flow = 0; // 重置流量
+					}
+					pathFlowCost();
+				}
+				getPath(cost); // 更新方案
+			}
 			return cost;
 		}
 
