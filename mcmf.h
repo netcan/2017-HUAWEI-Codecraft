@@ -128,7 +128,7 @@ class MCMF{
 
 				if(downShift) {
 					e.cap = servers[nodes[e.to].bestCdnId].outFlow;
-					if(nodes[e.to].bestCdnId  == 0) diff.push_back(make_pair(INF, e.to));
+					if(nodes[e.to].bestCdnId  == 0) diff.push_back(make_pair(0, e.to));
 					else diff.push_back(make_pair(
 								(servers[nodes[e.to].bestCdnId].cost - servers[nodes[e.to].bestCdnId - 1].cost) /
 								(e.flow - servers[nodes[e.to].bestCdnId - 1].outFlow)
