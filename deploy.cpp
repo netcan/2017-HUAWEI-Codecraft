@@ -321,7 +321,7 @@ void SAGA(unordered_set<int>init = {}, double T = 20.0, double poi = 0.05, doubl
 	genes[0].set(initial, mcmf.networkNum);
 	unordered_set<int> direct = directConn();
 	for(int i = 1; i < geneCnt; ++i)
-		genes[i].set(direct, mcmf.networkNum);
+		genes[i].reset(mcmf.networkNum);
 
 
 	int iterationCnt = 0;
@@ -588,6 +588,8 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 		mcmf.setCostPerCdnMethod(false); // 服务器费用固定
 		// mcmf.setCostCdnGap(30);
 		SA(XJBS(true), 1, 20, 0.999, 0.02);
+		// GA(XJBS(true));
+		// SAGA(XJBS(true), 200, 0.00, 0.99, 20, 0.95, 0.05);
 	} else {
 		// mcmf.setCostCdnGap(50);
 		mcmf.setCostPerCdnMethod(false); // 服务器费用固定
