@@ -576,18 +576,18 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 {
 	Signal(SIGALRM, timeOutHandler);
 	// 启动计时器
-	alarm(87);
+	alarm(88);
 	mcmf.loadGraph(topo, line_num);
 
 	if(mcmf.networkNum < 200) {
 		mcmf.setCostPerCdnMethod(true); // 动态变动
 		// mcmf.setCostCdnGap(15);
-		SA(XJBS(false), 1, 20, 0.99, 0.02);
+		while(runing) SA(XJBS(false), 1, 20, 0.99, 0.02);
 	}
 	else if(mcmf.networkNum < 500){
-		mcmf.setCostPerCdnMethod(false); // 服务器费用固定
+		mcmf.setCostPerCdnMethod(true); // 服务器费用固定
 		// mcmf.setCostCdnGap(30);
-		SA(XJBS(true), 1, 20, 0.999, 0.02);
+		SA(XJBS(false), 1, 500, 0.999, 0.01);
 		// GA(XJBS(true));
 		// SAGA(XJBS(true), 200, 0.00, 0.99, 20, 0.95, 0.05);
 	} else {
