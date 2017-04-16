@@ -9,7 +9,7 @@
 #include <sys/time.h>
 
 using namespace std;
-class MC{
+class mcmf_scaling{
 public:
 	double minpot1( vector<int> &v, vector<double> &r ){
 		double m;
@@ -22,6 +22,7 @@ public:
 		}
 		return m;
 	}
+
 	double minpot2( vector<int> &v, vector<double> &r ){
 		double m;
 		
@@ -34,7 +35,6 @@ public:
 		}
 		return m;
 	}
-
 
 	void initflow( vector<int> &x, vector<double> const &r, vector<int> const &c, int A){
 		int i;
@@ -77,7 +77,6 @@ public:
 	double diff_sec(timeval t1, timeval t2){
 		return (t2.tv_sec - t1.tv_sec +  (t2.tv_usec - t1.tv_usec)/1000000.0 );
 	}
-
 
 	void readdata(const char *filename, int &N, int &A, vector<int> &startnode, vector<int> &endnode, vector<int> &d, vector<int> &c, vector<int> &b, vector<int> &degree){
 		ifstream inputdata;
@@ -164,7 +163,6 @@ public:
 			arcout[m][numarcout[m]] = i;
 			numarcout[m] += 1;
 		}
-
 
 		d_max = fabs(double(d[0]));
 		for(i=0; i < A; i++){
@@ -318,8 +316,8 @@ public:
 
 /*
 int main( int argc, char *argv[] ){
-	MC ac;
+	mcmf_scaling ac;
 	ac.solve(argc, argv);
 	return 0;
 }
-*/    
+*/
