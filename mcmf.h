@@ -5,6 +5,8 @@
 	  > Mail: 1469709759@qq.com
 	  > Created Time: 2017-03-22 Wed 12:33:02 CST
  ************************************************************************/
+#ifndef __MCMF__
+#define __MCMF__
 
 #include <cstdio>
 #include <assert.h>
@@ -17,10 +19,9 @@
 #include <unordered_set>
 #include <unordered_map>
 #include "deploy.h"
+#include "mcmf_scaling.cpp"
 using namespace std;
 
-#ifndef __MCMF__
-#define __MCMF__
 
 extern bool runing;
 
@@ -241,6 +242,7 @@ class MCMF{
 		vector<Edge> edges; // 边集
 		int networkNum, edgeNum, consumerNum, needFlow, costPerCDN = 0;
 		static const int INF = 0x3f3f3f3f;
+		friend class MCMF_SCALING;
 
 		void inline showRealMinCost() {
 #ifdef _DEBUG

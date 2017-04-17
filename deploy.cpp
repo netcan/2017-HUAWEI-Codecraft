@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "random.h"
 #include "mcmf.h"
+#include "mcmf_scaling.cpp"
 #include "gene.h"
 
 typedef void (sigFunc)(int);
