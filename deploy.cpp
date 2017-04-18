@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include "random.h"
 #include "mcmf.h"
-#include "mcmf_scaling.cpp"
 #include "gene.h"
 
 typedef void (sigFunc)(int);
@@ -226,10 +225,10 @@ void GA(unordered_set<int> init = {}, int geneCnt = 20, double retain = 12, doub
 //- GA end
 
 //- 模拟退火 begin
-int SA(unordered_set<int>init = {}, int innerLoop = 10, double T = 20.0, double delta = 0.99999, double poi = 0.02) { // 模拟退火，初始温度，迭代系数，0.15的增点概率
+unordered_set<int> SA(unordered_set<int>init = {}, int innerLoop = 10, double T = 20.0, double delta = 0.99999, double poi = 0.02) { // 模拟退火，初始温度，迭代系数，0.15的增点概率
 	// double T = 20.0, delta = 0.99999; // 初始温度20, 0.999-0.999999
 
-	unordered_set<int> backup, cur;
+	unordered_set<int> backup, cur, best;
 
 	if(init.empty()) backup = directConn();
 	else backup = move(init);
@@ -283,7 +282,10 @@ int SA(unordered_set<int>init = {}, int innerLoop = 10, double T = 20.0, double 
 					cur.clear();
 				}
 
-				minCost = min(minCost, backCost);
+				if(minCost > backCost) {
+					minCost = backCost;
+					best = backup;
+				}
 			}
 		}
 		T *= delta;
@@ -300,7 +302,7 @@ int SA(unordered_set<int>init = {}, int innerLoop = 10, double T = 20.0, double 
 		// printf("%d ", x);
 	// puts("\n=====Solution======");
 	// mcmf.showSolution();
-	return minCost;
+	return best;
 }
 //- 模拟退火 end
 
@@ -580,29 +582,22 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	alarm(88);
 	mcmf.loadGraph(topo, line_num);
 
-	if(mcmf.networkNum < 200) {
-		mcmf.setCostPerCdnMethod(true); // 动态变动
-		// mcmf.setCostCdnGap(15);
-		while(runing) SA(XJBS(false), 1, 20, 0.99, 0.02);
-	}
-	else if(mcmf.networkNum < 800){
-		mcmf.setCostPerCdnMethod(false); // 服务器费用固定
-		// mcmf.setCostCdnGap(30);
-		SA(XJBS(false), 1, 500, 0.999, 0.01);
+	if(mcmf.networkNum < 800){
+		mcmf.setCostCdnGap(0); // 不贪心降档
+		unordered_set<int> s = SA(XJBS(true), 1, 200, 0.9999, 0.00);
+		mcmf.setCostCdnGap(1000); // 最后才贪心降档
+		mcmf.minCost_Set(s);
+		mcmf.showRealMinCost();
 		// GA(XJBS(true));
 		// SAGA(XJBS(true), 200, 0.00, 0.99, 20, 0.95, 0.05);
 	} else {
-		// mcmf.setCostCdnGap(50);
-		mcmf.setCostPerCdnMethod(false); // 服务器费用固定
-		SA(XJBS(false), 1, 20, 0.99999, 0.02);
+		mcmf.setCostCdnGap(0); // 不贪心降档
+		unordered_set<int> s = SA(XJBS(true), 1, 500, 0.9999, 0.00);
+		mcmf.setCostCdnGap(1000); // 最后才贪心降档
+		mcmf.minCost_Set(s);
+		mcmf.showRealMinCost();
 	}
 
-	// unordered_set<int> cdn = {
-		// 14, 15, 19, 22, 32, 54, 62, 68, 94, 99, 182, 184, 192, 215, 223, 226, 245, 257, 265, 282, 301, 318, 320, 335, 339, 351, 370, 381, 383, 397, 413, 425, 445, 481, 511, 541, 543, 579, 610, 620, 626, 639, 641, 673, 679, 691, 702, 745, 768, 796,
-	// };
-	// mcmf.minCost_Set(cdn);
-	// printf("cost=%d\n", mcmf.minCost_Set(cdn));
-	// mcmf.showRealMinCost();
 
 	// SA(Tabu({}, 20));
 	// GA(XJBS(true));

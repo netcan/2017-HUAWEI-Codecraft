@@ -19,7 +19,6 @@
 #include <unordered_set>
 #include <unordered_map>
 #include "deploy.h"
-#include "mcmf_scaling.cpp"
 using namespace std;
 
 
@@ -56,7 +55,6 @@ class MCMF{
 		bool vis[N]; // 标记数组
 		vector<Server> servers; // 服务器
 		Server maxFlowServer;
-		bool costPerCDNMethod = false; // 服务器费用计算策略，false为固定费用，true为动态费用，默认为固定
 #ifdef _DEBUG
 		int realMinCost = INF; // 保存真实的最小费用，最后打印，调试用
 #endif
@@ -98,7 +96,6 @@ class MCMF{
 			}
 			while(modLabel(tmpCost));
 			if(flow < needFlow) return -1;
-			// printf("path cost: %d flow: %d\n", cost, flow);
 			return cost;
 
 			// SLF优化
@@ -145,7 +142,7 @@ class MCMF{
 			if(downShift) {
 				sort(diff.begin(), diff.end(), greater<pair<int, int>>());
 
-				for(size_t i = 0;runing && i < diff.size(); ++i) {
+				for(size_t i = 0; i < diff.size(); ++i) {
 					int u = diff[i].second;
 					if(nodes[u].bestCdnId == 0) continue;
 					for(size_t j = 0; j < edges.size(); ++j) {
@@ -184,7 +181,7 @@ class MCMF{
 				// printf("%d e.flow: %d/%d(%d)\n", e.to, e.flow, servers[nodes[e.to].bestCdnId].outFlow, servers[nodes[e.to].bestCdnId].level);
 			// }
 
-			cost = minCdnFlowCost - cdnCost;
+			cost = minCdnFlowCost;
 
 
 			// 计算部署费用
@@ -195,12 +192,6 @@ class MCMF{
 				cost += nodes[c].deployCost;
 #ifdef _DEBUG
 				realCost += nodes[c].deployCost;
-#endif
-				if(costPerCDNMethod) // 动态调节服务器费用
-					cost += servers[nodes[c].bestCdnId].cost;
-				else cost += costPerCDN;
-#ifdef _DEBUG
-				realCost += servers[nodes[c].bestCdnId].cost;
 #endif
 			}
 
@@ -258,9 +249,6 @@ class MCMF{
 		MCMF() {
 			needFlow = 0;
 		};
-		inline void setCostPerCdnMethod(bool x) {
-			costPerCDNMethod = x;
-		}
 		inline void setCostCdnGap(int x) {
 			minCostCdnGap = x;
 		}
