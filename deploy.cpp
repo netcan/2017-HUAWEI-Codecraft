@@ -585,8 +585,8 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 		// mcmf.setCostCdnGap(15);
 		while(runing) SA(XJBS(false), 1, 20, 0.99, 0.02);
 	}
-	else if(mcmf.networkNum < 500){
-		mcmf.setCostPerCdnMethod(true); // 服务器费用固定
+	else if(mcmf.networkNum < 800){
+		mcmf.setCostPerCdnMethod(false); // 服务器费用固定
 		// mcmf.setCostCdnGap(30);
 		SA(XJBS(false), 1, 500, 0.999, 0.01);
 		// GA(XJBS(true));
@@ -594,7 +594,7 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	} else {
 		// mcmf.setCostCdnGap(50);
 		mcmf.setCostPerCdnMethod(false); // 服务器费用固定
-		SA(XJBS(true), 1, 20, 0.99999, 0.02);
+		SA(XJBS(false), 1, 20, 0.99999, 0.02);
 	}
 
 	// unordered_set<int> cdn = {
