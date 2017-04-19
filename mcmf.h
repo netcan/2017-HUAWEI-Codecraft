@@ -140,8 +140,13 @@ class MCMF{
 				while(! exit) {
 					diff.clear();
 					for (size_t i = 0; i < G[superSource].size(); i++) {
-						Edge &e = edges[G[superSource][i]];
+						const Edge &e = edges[G[superSource][i]];
+						// printf("u: %d e.flow: %d/%d(%d)\n", e.to, e.flow, servers[nodes[e.to].bestCdnId].outFlow, servers[nodes[e.to].bestCdnId].level);
+
 						if(nodes[e.to].bestCdnId  == 0) diff.push_back(make_pair(0, e.to));
+						else if(e.flow == servers[nodes[e.to].bestCdnId - 1].outFlow) { // 直接可以降档
+							diff.push_back(make_pair(INF, e.to));
+						}
 						else diff.push_back(make_pair(
 									(servers[nodes[e.to].bestCdnId].cost - servers[nodes[e.to].bestCdnId - 1].cost) /
 									(e.flow - servers[nodes[e.to].bestCdnId - 1].outFlow)
