@@ -176,10 +176,7 @@ class MCMF{
 					// printf("cdnFlow: %d cdnCost: %d needFlow: %d minCdnFlowCost: %d\n", cdnFlow, cdnCost, needFlow, minCdnFlowCost);
 				}
 			}
-			// for (size_t i = 0; i < G[superSource].size(); i++) { // 降档
-				// Edge &e = edges[G[superSource][i]];
-				// printf("%d e.flow: %d/%d(%d)\n", e.to, e.flow, servers[nodes[e.to].bestCdnId].outFlow, servers[nodes[e.to].bestCdnId].level);
-			// }
+
 
 			cost = minCdnFlowCost;
 
@@ -207,6 +204,22 @@ class MCMF{
 					}
 					pathFlowCost();
 				}
+
+				// 打印档次
+				/*
+				vector<pair<int,int>> v;
+				for (size_t i = 0; i < G[superSource].size(); i++) { // 降档
+					Edge &e = edges[G[superSource][i]];
+					v.push_back(make_pair(e.to, G[superSource][i]));
+				}
+				sort(v.begin(), v.end());
+
+				for(size_t i = 0; i < v.size(); ++i) {
+					Edge &e =  edges[v[i].second];
+					// printf("%d e.flow: %d/%d(%d)\n", e.to, e.flow, servers[nodes[e.to].bestCdnId].outFlow, servers[nodes[e.to].bestCdnId].level);
+					printf("%d\t%d\n", e.to, servers[nodes[e.to].bestCdnId].level);
+				}
+				*/
 				getPath(cost); // 更新方案
 			}
 			return cost;

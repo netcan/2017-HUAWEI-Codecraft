@@ -619,8 +619,12 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 		// SAGA(XJBS(true), 20, 0.00, 0.999, 6, 0.8, 0.05);
 	// }
 
-	// unordered_set<int> cdn{0, 3, 22};
-	// printf("cost = %d\n", mcmf.minCost_Set(cdn));
+	// unordered_set<int> cdn{
+		// 0, 3, 21, 29, 47, 49, 50, 70, 71, 88, 135, 141, 178, 179, 187, 205, 214, 223, 224, 236, 254, 255, 269, 271, 282, 290, 301, 321, 335, 344, 345, 351, 352, 365, 384, 387, 392, 393, 395, 401, 413, 423, 431, 476, 478, 511, 523, 539, 545, 546, 578, 582, 590
+	// };
+	// mcmf.setCostCdnGap(1000);
+	// mcmf.minCost_Set(cdn);
+	// mcmf.showRealMinCost();
 
 
 	//- test
