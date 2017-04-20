@@ -285,6 +285,7 @@ unordered_set<int> SA(unordered_set<int>init = {}, int innerLoop = 10, double T 
 				if(minCost > backCost) {
 					minCost = backCost;
 					best = backup;
+					// mcmf.showRealMinCost();
 				}
 			}
 		}
@@ -583,11 +584,11 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	mcmf.loadGraph(topo, line_num);
 
 	if(mcmf.networkNum < 800){
-		mcmf.setCostCdnGap(0); // 不贪心降档
+		mcmf.setCostCdnGap(80); // 不贪心降档
 		unordered_set<int> s = SA(XJBS(true), 1, 200, 0.9999, 0.00);
-		mcmf.setCostCdnGap(1000); // 最后才贪心降档
-		mcmf.minCost_Set(s);
-		mcmf.showRealMinCost();
+		// mcmf.setCostCdnGap(1000); // 最后才贪心降档
+		// mcmf.minCost_Set(s);
+		// mcmf.showRealMinCost();
 		// GA(XJBS(true));
 		// SAGA(XJBS(true), 200, 0.00, 0.99, 20, 0.95, 0.05);
 	} else {
