@@ -205,6 +205,9 @@ void MCMF::loadGraph(char * topo[MAX_EDGE_NUM], int line_num) {
 	costPerCDN = maxFlowServer.cost; // 以最大档次的费用为准
 	solutionPath.first = INF;
 	sort(servers.begin(), servers.end());
+	for(int u = 0; u < networkNum; ++u)
+		nodes[u].bestCdnId = servers.size() - 1;
+
 	calcEvaluation();
 }
 

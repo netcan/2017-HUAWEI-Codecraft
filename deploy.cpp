@@ -257,7 +257,21 @@ unordered_set<int> SA(unordered_set<int>init = {}, int innerLoop = 10, double T 
 			// - 选完v了
 
 			for(int x: backup) {
-				if(x == u) cur.insert(v);
+				if(x == u) {
+					if(cur.count(v)) {
+						int flow = mcmf.servers[mcmf.nodes[v].bestCdnId].outFlow + mcmf.servers[mcmf.nodes[u].bestCdnId].outFlow;
+						// puts("==================");
+						// printf("%d\n", mcmf.nodes[v].bestCdnId);
+						vector<MCMF::Server>::iterator it;
+						if( (it = lower_bound(mcmf.servers.begin(), mcmf.servers.end(), flow))  != mcmf.servers.end()) // >= 升档
+							mcmf.nodes[v].bestCdnId = it - mcmf.servers.begin(); // 存放下标，nodes输出路径的时候用
+						else mcmf.nodes[v].bestCdnId = mcmf.servers.size() - 1;
+						// printf("%d\n", mcmf.nodes[v].bestCdnId);
+
+						// if(mcmf.nodes[v].bestCdnId < (int)mcmf.servers.size() - 1)
+							// ++mcmf.nodes[v].bestCdnId; // 升档
+					} else cur.insert(v);
+				}
 				else cur.insert(x);
 			}
 
@@ -584,17 +598,17 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 
 	if(mcmf.networkNum < 800){
 		mcmf.setCostCdnGap(0); // 不贪心降档
-		unordered_set<int> s = SA(XJBS(true), 1, 200, 0.9999, 0.00);
-		mcmf.setCostCdnGap(1000); // 最后才贪心降档
-		mcmf.minCost_Set(s);
+		unordered_set<int> s = SA({}, 1, 200, 0.99999, 0.00);
+		// mcmf.setCostCdnGap(1000); // 最后才贪心降档
+		// mcmf.minCost_Set(s);
 		mcmf.showRealMinCost();
 		// GA(XJBS(true));
 		// SAGA(XJBS(true), 200, 0.00, 0.99, 20, 0.95, 0.05);
 	} else {
 		mcmf.setCostCdnGap(0); // 不贪心降档
 		unordered_set<int> s = SA(XJBS(true), 1, 500, 0.9999, 0.00);
-		mcmf.setCostCdnGap(1000); // 最后才贪心降档
-		mcmf.minCost_Set(s);
+		// mcmf.setCostCdnGap(1000); // 最后才贪心降档
+		// mcmf.minCost_Set(s);
 		mcmf.showRealMinCost();
 	}
 
