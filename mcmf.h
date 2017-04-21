@@ -95,6 +95,8 @@ class MCMF{
 
 			for (size_t i = 0; i < G[superSource].size(); i++) { // 降档
 				Edge &e = edges[G[superSource][i]];
+				if(e.flow == 0)  // 无效节点
+					continue;
 
 				vector<Server>::iterator it;
 				if( (it = lower_bound(servers.begin(), servers.end(), e.flow))  != servers.end()) // >= 降档
