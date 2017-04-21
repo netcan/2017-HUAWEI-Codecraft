@@ -117,6 +117,7 @@ class MCMF{
 
 			for (size_t i = 0; i < G[superSource].size(); i++) { // 降档
 				Edge &e = edges[G[superSource][i]];
+				if(e.flow == 0) continue;
 
 				vector<Server>::iterator it;
 				if( (it = lower_bound(servers.begin(), servers.end(), e.flow))  != servers.end()) // >= 降档
@@ -141,6 +142,7 @@ class MCMF{
 					diff.clear();
 					for (size_t i = 0; i < G[superSource].size(); i++) {
 						const Edge &e = edges[G[superSource][i]];
+						if(e.flow == 0) continue;
 						// printf("u: %d e.flow: %d/%d(%d)\n", e.to, e.flow, servers[nodes[e.to].bestCdnId].outFlow, servers[nodes[e.to].bestCdnId].level);
 
 						if(nodes[e.to].bestCdnId  == 0) diff.push_back(make_pair(0, e.to));
