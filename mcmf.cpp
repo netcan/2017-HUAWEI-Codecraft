@@ -168,13 +168,11 @@ void MCMF::loadGraph(char * topo[MAX_EDGE_NUM], int line_num) {
 	superSink = consumerNum + networkNum + 1;
 	Vn = superSink + 1;
 
-	int a, b, c, d;
+	int a, b, c, d, maxCap = 0;
 	int i;
 	for(i = 2; i < line_num && !isspace(topo[i][0]); ++i) {
 		sscanf(topo[i], "%d%d%d", &a, &b, &c); // 服务器硬件档次ID 输出能力 硬件成本
 		servers.push_back(Server(a, b, c));
-		if(maxFlowServer < servers.back()) maxFlowServer = servers.back();
-
 		// printf("level: %d outFlow: %d cost: %d\n", a, b, c);
 	}
 	// printf("maxFlowServer level: %d outFlow: %d cost: %d\n", maxFlowServer.level, maxFlowServer.outFlow, maxFlowServer.cost);
@@ -196,15 +194,23 @@ void MCMF::loadGraph(char * topo[MAX_EDGE_NUM], int line_num) {
 		sscanf(topo[i], "%d%d%d", &a, &b, &c); // 消费节点ID 相连网络节点ID 视频带宽消耗需求
 		AddEdge(b, a + networkNum, c, 0); // 与网络节点相连
 		AddEdge(a + networkNum, superSink, c, 0); // 与汇点相连
+		maxCap = max(maxCap, c);
 		// printf("consumer: %d connect: %d need: %d\n", a, b, c);
 
 		// vector<int> path{to, from, bandwidth}; // 直连策略
 		// solutionPath.second.push_back(move(path));
 	}
-	edgeNum = edges.size(); // 边数
-	costPerCDN = maxFlowServer.cost; // 以最大档次的费用为准
-	solutionPath.first = INF;
 	sort(servers.begin(), servers.end());
+	maxFlowServer = servers.back();
+	// vector<Server>::iterator it;
+	// if( (it = lower_bound(servers.begin(), servers.end(), maxCap))  != servers.end()) // >= 最大档
+		// maxFlowServer = *it; // 存放下标，nodes输出路径的时候用
+	// else maxFlowServer = servers.back(); // 最大的level
+	// printf("l: %d\n", maxFlowServer.level);
+
+	costPerCDN = maxFlowServer.cost; // 以最大档次的费用为准
+	edgeNum = edges.size(); // 边数
+	solutionPath.first = INF;
 	calcEvaluation();
 }
 
