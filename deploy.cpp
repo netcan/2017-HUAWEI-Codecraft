@@ -225,6 +225,19 @@ void GA(unordered_set<int> init = {}, int geneCnt = 20, double retain = 12, doub
 //- GA end
 
 //- 模拟退火 begin
+int select(const vector<pair<int, double>> & cdn) {
+	double R = Rand.Random_Real(0, 1);
+	double s = 0.0;
+	for(size_t i = 0; i < cdn.size(); ++i) {
+		s += cdn[i].second;
+		// printf("%f/%f\n", s, R);
+		if(s >= R) {
+			// printf("select %d\n", i);
+			return i;
+		}
+	}
+	return 0;
+}
 unordered_set<int> SA(unordered_set<int>init = {}, int innerLoop = 10, double T = 20.0, double delta = 0.99999, double poi = 0.02) { // 模拟退火，初始温度，迭代系数，0.15的增点概率
 	// double T = 20.0, delta = 0.99999; // 初始温度20, 0.999-0.999999
 
@@ -241,20 +254,31 @@ unordered_set<int> SA(unordered_set<int>init = {}, int innerLoop = 10, double T 
 	while(runing && T > 0.1) {
 
 		for(int loop = 0; loop < innerLoop && runing; ++loop) {
-			//- 随机选点u
-			int u = -1;
-			int i = Rand.Random_Int(0, backup.size() - 1);
-			auto it = backup.begin();
-			for(; it != backup.end() && i; ++it, --i);
-			u = *it;
-			// - 选完了
+			vector<pair<int, double>> cdn; // cdn选中的概率，概率越大，越容易被选中
+			double sum = 0.0;
+			int u = -1, v = -1;
+			// 随机选点u->v
+			for(auto x: backup)
+				sum += mcmf.nodes[x].evaluation;
+			for(auto x: backup)
+				cdn.push_back(make_pair(x, mcmf.nodes[x].evaluation / sum));
+			u = cdn[select(cdn)].first;
 
-			// 随机选u->v
-			int v = -1;
-			do {
-				v = mcmf.edges[mcmf.G[u][Rand.Random_Int(0, mcmf.G[u].size() - 1)]].to; // (u, v)随机选点
-			} while(v >= mcmf.networkNum); // 防止移动到消费节点
-			// - 选完v了
+			cdn.clear();
+			sum = 0.0;
+			for(size_t i = 0; i < mcmf.G[u].size(); ++i) {
+				int t = mcmf.edges[mcmf.G[u][i]].to;
+				if(t < mcmf.networkNum)
+					sum += 100000.0 / mcmf.nodes[t].evaluation;
+				// printf("%d %lf\n", t, mcmf.nodes[t].evaluation);
+			}
+			for(size_t i = 0; i < mcmf.G[u].size(); ++i) {
+				int t = mcmf.edges[mcmf.G[u][i]].to;
+				if(t < mcmf.networkNum)
+					cdn.push_back(make_pair(t, (100000.0 / mcmf.nodes[t].evaluation) / sum));
+			}
+			v = cdn[select(cdn)].first;
+
 
 			for(int x: backup) {
 				if(x == u) cur.insert(v);

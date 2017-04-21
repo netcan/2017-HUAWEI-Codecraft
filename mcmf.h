@@ -75,9 +75,9 @@ class MCMF{
 			}
 			G[superSource].clear();
 		}
-		inline void calcEvaluation() { // 评估函数
+		inline void calcEvaluation() { // 评估函数，评估值越小越好
 			for(int u = 0; u < networkNum; ++u)
-				nodes[u].evaluation =  nodes[u].nodeFlow * 1000.0 / nodes[u].deployCost;
+				nodes[u].evaluation =  nodes[u].deployCost * 100 / nodes[u].nodeFlow;
 		}
 
 		int findPath(vector<int> & tmpPath, int u, int minFlow, int totalFlow);
