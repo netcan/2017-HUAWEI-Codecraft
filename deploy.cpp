@@ -281,7 +281,17 @@ unordered_set<int> SA(unordered_set<int>init = {}, int innerLoop = 10, double T 
 
 
 			for(int x: backup) {
-				if(x == u) cur.insert(v);
+				if(x == u) { // u->v，新点v
+					// printf("%d->%d\n", u, v);
+					if(cur.count(v)) { // 合并uv
+						int flow = mcmf.servers[mcmf.nodes[v].bestCdnId].outFlow + mcmf.servers[mcmf.nodes[u].bestCdnId].outFlow;
+						vector<MCMF::Server>::iterator it;
+						if( (it = lower_bound(mcmf.servers.begin(), mcmf.servers.end(), flow))  != mcmf.servers.end()) // >= 升档
+							mcmf.nodes[v].bestCdnId = it - mcmf.servers.begin(); // 存放下标，nodes输出路径的时候用
+						else mcmf.nodes[v].bestCdnId = mcmf.servers.size() - 1;
+
+					} else cur.insert(v); // 新点
+				}
 				else cur.insert(x);
 			}
 
@@ -289,28 +299,37 @@ unordered_set<int> SA(unordered_set<int>init = {}, int innerLoop = 10, double T 
 				cur.insert(Rand.Random_Int(0, mcmf.networkNum - 1)); // 增加一个点
 
 			curCost = mcmf.minCost_Set(cur);
-			++iterationCnt;
 
-			if(curCost == -1)  {// 无解
+			if(curCost == -1) { // 无解继续
 				cur.clear();
 				continue;
 			}
-			else {
-				int dC = curCost - backCost;
-				// printf("dC: %d ratio: %lf probability: %lf\n", dC, curCost * 1.0 / minCost, exp(-dC / T));
-				if(min(1.0, exp(-dC / T)) > Rand.Random_Real(0, 1))  {// 接受
-					// printf("T: %lf dC: %d ratio: %lf\n", T, dC, curCost * 1.0 / minCost);
-					backup = move(cur);
-					backCost = curCost;
-				} else {
-					cur.clear();
-				}
 
-				if(minCost > backCost) {
-					minCost = backCost;
-					best = backup;
-					// mcmf.showRealMinCost();
-				}
+			// 对新点进行降档处理
+			for(mcmf.nodes[v].bestCdnId -= 1; mcmf.nodes[v].bestCdnId >= 0; --mcmf.nodes[v].bestCdnId) {
+				int tmp = mcmf.minCost_Set(cur);
+				if(tmp == -1 || tmp >= curCost) break;
+				curCost = tmp;
+				// printf("%d\n", curCost);
+			}
+			++mcmf.nodes[v].bestCdnId;
+
+			++iterationCnt;
+
+			int dC = curCost - backCost;
+			// printf("dC: %d ratio: %lf probability: %lf\n", dC, curCost * 1.0 / minCost, exp(-dC / T));
+			if(min(1.0, exp(-dC / T)) > Rand.Random_Real(0, 1))  {// 接受
+				// printf("T: %lf dC: %d ratio: %lf\n", T, dC, curCost * 1.0 / minCost);
+				backup = move(cur);
+				backCost = curCost;
+			} else {
+				cur.clear();
+			}
+
+			if(minCost > backCost) {
+				minCost = backCost;
+				best = backup;
+				// mcmf.showRealMinCost();
 			}
 		}
 		T *= delta;
@@ -608,18 +627,12 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 	mcmf.loadGraph(topo, line_num);
 
 	if(mcmf.networkNum < 800){
-		mcmf.setCostCdnGap(80); // 不贪心降档
-		unordered_set<int> s = SA(XJBS(true), 1, 200, 0.9999, 0.00);
-		// mcmf.setCostCdnGap(1000); // 最后才贪心降档
-		// mcmf.minCost_Set(s);
-		// mcmf.showRealMinCost();
+		unordered_set<int> s = SA({}, 1, 200, 0.99999, 0.00);
+		mcmf.showRealMinCost();
 		// GA(XJBS(true));
 		// SAGA(XJBS(true), 200, 0.00, 0.99, 20, 0.95, 0.05);
 	} else {
-		mcmf.setCostCdnGap(0); // 不贪心降档
-		unordered_set<int> s = SA(XJBS(true), 1, 500, 0.9999, 0.00);
-		mcmf.setCostCdnGap(1000); // 最后才贪心降档
-		mcmf.minCost_Set(s);
+		unordered_set<int> s = SA({}, 1, 500, 0.9999, 0.00);
 		mcmf.showRealMinCost();
 	}
 
