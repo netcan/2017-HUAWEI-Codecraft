@@ -289,7 +289,6 @@ unordered_set<int> SA(unordered_set<int>init = {}, int innerLoop = 10, double T 
 				cur.insert(Rand.Random_Int(0, mcmf.networkNum - 1)); // 增加一个点
 
 			curCost = mcmf.minCost_Set(cur);
-			++iterationCnt;
 
 			if(curCost == -1)  {// 无解
 				cur.clear();
@@ -309,11 +308,15 @@ unordered_set<int> SA(unordered_set<int>init = {}, int innerLoop = 10, double T 
 				if(minCost > backCost) {
 					minCost = backCost;
 					best = backup;
-					// mcmf.showRealMinCost();
+#ifdef _DEBUG
+					printf("T=%lf iterationCnt=%d\n", T, iterationCnt);
+					mcmf.showRealMinCost();
+#endif
 				}
 			}
 		}
 		T *= delta;
+		++iterationCnt;
 
 		// printf("T=%lf iterationCnt=%d minCost = %d\n", T, iterationCnt, minCost);
 	}
