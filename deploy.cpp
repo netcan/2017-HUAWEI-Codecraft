@@ -314,7 +314,6 @@ unordered_set<int> SA(unordered_set<int>init = {}, int innerLoop = 10, double T 
 			}
 			++mcmf.nodes[v].bestCdnId;
 
-			++iterationCnt;
 
 			int dC = curCost - backCost;
 			// printf("dC: %d ratio: %lf probability: %lf\n", dC, curCost * 1.0 / minCost, exp(-dC / T));
@@ -329,10 +328,14 @@ unordered_set<int> SA(unordered_set<int>init = {}, int innerLoop = 10, double T 
 			if(minCost > backCost) {
 				minCost = backCost;
 				best = backup;
-				// mcmf.showRealMinCost();
+#ifdef _DEBUG
+				printf("T=%lf iterationCnt=%d\n", T, iterationCnt);
+#endif
+				mcmf.showRealMinCost();
 			}
 		}
 		T *= delta;
+		++iterationCnt;
 
 		// printf("T=%lf iterationCnt=%d minCost = %d\n", T, iterationCnt, minCost);
 	}
@@ -632,7 +635,7 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 		// GA(XJBS(true));
 		// SAGA(XJBS(true), 200, 0.00, 0.99, 20, 0.95, 0.05);
 	} else {
-		unordered_set<int> s = SA({}, 1, 500, 0.9999, 0.00);
+		unordered_set<int> s = SA({}, 1, 200, 0.9996, 0.00);
 		mcmf.showRealMinCost();
 	}
 
