@@ -607,7 +607,7 @@ void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
 {
 	Signal(SIGALRM, timeOutHandler);
 	// 启动计时器
-	alarm(88);
+	alarm(86);
 	mcmf.loadGraph(topo, line_num);
 
 	if(mcmf.networkNum < 800){
